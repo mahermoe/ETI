@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang= "en">
+<head>
+  <meta charset= "UTF-8">
+  <meta name= "viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Play</title>
+    
+    <link rel= "stylesheet" href="EnterName.css">
+   
+</head>
+
+<body>
+  <div class = "input-container">
+    <label for = "Player-name">Enter Your Name: </label>
+    <input type = "text" id = "player-name" name = "player-name" required placeholder="The Adventure of...." autocomplete="off">
+    <button onclick= "submitName()">Lets Go!</button>
+    <div id = "successBox" class = "hidden"></div>  
+    <div id = "errorBox" class = "hidden"></div>
+    <script src= "EnterName.js"></script> 
+  </div>
+    <a href="Home.html" class="back-button">Go Back to Home</a>  
+
+</body>
+</html>
