@@ -1,0 +1,37 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TestDiep</title>
+    </head>
+    <body>
+        <canvas id="gameCanvas" style="width: 1000; height: 1000;" ></canvas>
+        <script src="/socket.io/socket.io.js"></script>
+
+        <script>
+            const socket = io(); // connect to server
+            // 
+            const canvas = document.getElementById('gameCanvas');
+            const context = canvas.getContext('2d');
+
+            document.addEventListener('keydown', (event) => {
+                if (event.code === 'KeyW') socket.emit('move', {dx: 0, dy: -1 });
+                if (event.code === 'KeyS') socket.emit('move', {dx: 0, dy: 1 });
+                if (event.code === 'KeyA') socket.emit('move', {dx: -1, dy: 0 });
+                if (event.code === 'KeyD') socket.emit('move', {dx: 1, dy: 0 });
+            });
+
+            socket.on('state', (players) => {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                for (let id in players) {
+                    const player = players[id];
+                    context.fillRect(player.x, player.y, 10, 10); // Draw player at position
+                }
+            });
+
+        </script>
+
+
+
+
+    </body>
