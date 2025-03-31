@@ -2,36 +2,32 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>TestDiep</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ETI</title>
+        <link rel="stylesheet" href="styles.css">
+        <script src="/socket.io/socket.io.js"></script> <!-- Ensure Socket.IO client is loaded -->
+        <script type="module" src="socket.js"></script> <!-- Shared socket connection -->
+        <script type="module" src="index.js"></script> <!-- or your game script -->
+
+
+
     </head>
     <body>
-        <canvas id="gameCanvas" style="width: 1000; height: 1000;" ></canvas>
-        <script src="/socket.io/socket.io.js"></script>
+        <!-- Name Entry Screen -->
+         <div id="enterNameScreen" class="input-container">
+            <label for="player-name">Enter Your Name:</label>
+            <input type="text" id="player-name" required placeholder="The Adventure of..." autocomplete="off">
+            <button onclick="submitName()">Let's Go!</button>
+            <div id="successBox" class="hidden"></div>  
+            <div id="errorBox" class="hidden"></div>
+         </div>
 
-        <script>
-            const socket = io(); // connect to server
-            // 
-            const canvas = document.getElementById('gameCanvas');
-            const context = canvas.getContext('2d');
+        <!-- Game Screen (Initially Hidden)-->
+         <div id="gameScreen" class="hidden">
+            <canvas id="gameCanvas" width = "2000" height = "1000"></canvas>
+         </div>
 
-            document.addEventListener('keydown', (event) => {
-                if (event.code === 'KeyW') socket.emit('move', {dx: 0, dy: -1 });
-                if (event.code === 'KeyS') socket.emit('move', {dx: 0, dy: 1 });
-                if (event.code === 'KeyA') socket.emit('move', {dx: -1, dy: 0 });
-                if (event.code === 'KeyD') socket.emit('move', {dx: 1, dy: 0 });
-            });
-
-            socket.on('state', (players) => {
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                for (let id in players) {
-                    const player = players[id];
-                    context.fillRect(player.x, player.y, 10, 10); // Draw player at position
-                }
-            });
-
-        </script>
-
-
-
-
+        
     </body>
+</html>

@@ -12,15 +12,15 @@ app.use(express.json()); // Parse JSON for POST requests
 
 // In-memory game state
 let players = {};
-let bullets = {}; // placeholder if you're adding projectile logic later
-
-// HTTP POST /register — for fetch() from EnterName
-app.post("/register", (req, res) => {
-  const playerName = req.body.player_name;
-  console.log("Register via HTTP POST:", playerName);
-  // You can insert this into a DB or just log it for now
-  res.send("Success");
-});
+let bullets = [];
+const classData = {
+  pistol : {
+    bulletSpeed: 10,
+    bulletDmg: 20,
+    hitbox: 5,
+    movementSpeed: 5
+  }
+} 
 
 // Start HTTP + WebSocket server
 server.listen(2000, () => {
@@ -39,30 +39,47 @@ io.on('connection', (socket) => {
     xp: 0,
     hp: 100,
     class: "pistol",
+    spawned: false,
   };
 
   // Receive player name from client after connecting
   socket.on('register', (playerName) => {
     if (players[socket.id]) {
       players[socket.id].name = playerName;
-      console.log(`Socket registered: ${playerName}`);
+      console.log(`Socket registered: ${playerName} (ID: ${socket.id})`);
+      socket.emit('registerSuccess', playerName);
+      players[socket.id].spawned = true;
     }
   });
 
   // Movement event
   socket.on('move', (data) => {
     if (players[socket.id]) {
-      players[socket.id].x += data.dx;
-      players[socket.id].y += data.dy;
+      players[socket.id].x += data.dx * classData[players[socket.id].class].movementSpeed;
+      players[socket.id].y += data.dy * classData[players[socket.id].class].movementSpeed;
     }
   });
+    
 
   // Shooting event placeholder
-  socket.on('shoot', () => {
+  socket.on('shoot', (data) => {
     const player = players[socket.id];
-    if (player) {
+    if (player && player.spawned) {
       console.log(`${player.name} shot!`);
-      // Add bullet logic here later
+
+      let dx = data.mouseX - player.x;
+      let dy = data.mouseY - player.y;
+      let bulletSpeed = classData[player.class].bulletSpeed;
+
+      bullets.push({
+        x: player.x,
+        y: player.y,
+        dx: dx * bulletSpeed,
+        dy: dy * bulletSpeed,
+        owner: socket.id,
+        class: player.class
+      });
+
     }
   });
 
@@ -74,7 +91,7 @@ io.on('connection', (socket) => {
 });
 
 // Game loop: broadcast player state every frame
-const framerate = 30;
+const framerate = 60;
 setInterval(() => {
-  io.emit('state', players);
+  io.emit('state', {players, bullets});
 }, 1000 / framerate);
