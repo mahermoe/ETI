@@ -1,5 +1,12 @@
 import socket from "./socket.js";
 
+
+let myId = null; // Store the player's ID
+
+socket.on("yourId", (id) => {
+  myId = id; // Store the player's ID when received from the server
+});
+
 // Show custom success popup
 function showSuccess(message) {
     const box = document.getElementById("successBox");
@@ -85,6 +92,7 @@ function updateMovement() {
     if (keys.d) dx += 1;
 
     if (dx !== 0 || dy !== 0) {
+        console.log("Emitting move:", dx, dy);
         socket.emit("move", { dx, dy });
     }
     
@@ -98,13 +106,15 @@ socket.on("state", (data) => {
         if (!players[id]) {
             players[id] = { 
                 x: data.players[id].x, 
-                y: data.players[id].y 
+                y: data.players[id].y, 
+                name: data.players[id].name
             };
         }
         
         // Apply lerping for smooth movement
         players[id].x += (data.players[id].x - players[id].x) * lerpFactor;
         players[id].y += (data.players[id].y - players[id].y) * lerpFactor;
+        players[id].name = data.players[id].name; // Update player name
     }
     
     // Remove players that are no longer in the data
@@ -121,13 +131,51 @@ function drawGame() {
     context.save(); // Save canvas state
     context.scale(zoom, zoom); // Apply zoom
 
+    const currentPlayer = players[myId];
+  if (currentPlayer) {
+    // Shift the canvas to center the player
+    const offsetX = canvas.width / (2 * zoom) - currentPlayer.x;
+    const offsetY = canvas.height / (2 * zoom) - currentPlayer.y;
+    context.translate(offsetX, offsetY);
+
+    // Draw scrolling background grid
+    const gridSize = 50;
+    const startX = -offsetX % gridSize;
+    const startY = -offsetY % gridSize;
+
+    context.strokeStyle = "#ddd";
+    for (let x = startX; x < canvas.width / zoom; x += gridSize) {
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, canvas.height / zoom);
+        context.stroke();
+    }
+
+    for (let y = startY; y < canvas.height / zoom; y += gridSize) {
+        context.beginPath();
+        context.moveTo(0, y);
+        context.lineTo(canvas.width / zoom, y);
+        context.stroke();
+    }
+
+  }
+
+
     // Draw all players
     for (const id in players) {
         const player = players[id];
-        context.fillStyle = id === socket.id ? "blue" : "red"; // Color current player differently
+        context.fillStyle = id === myId ? "blue" : "red"; // Color current player differently
+        
+        // Draw player as a circle
         context.beginPath();
         context.arc(player.x, player.y, 10, 0, Math.PI * 2); // Draw player as a circle
         context.fill();
+
+        // Draw player name above the circle
+        context.fillStyle = "black";
+        context.font = "12px Arial";
+        context.fillText(player.name || "?", player.x - 15, player.y - 15);
+    
     }
 
     context.restore(); // Restore canvas state

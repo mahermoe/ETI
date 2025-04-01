@@ -29,6 +29,8 @@ server.listen(2000, () => {
 
 // Real-time WebSocket logic
 io.on('connection', (socket) => {
+  socket.emit("yourId", socket.id);
+
   console.log('A user connected:', socket.id);
 
   // Create default player entry
@@ -54,9 +56,11 @@ io.on('connection', (socket) => {
 
   // Movement event
   socket.on('move', (data) => {
+    console.log("Server got move:", socket.id, data);
     if (players[socket.id]) {
       players[socket.id].x += data.dx * classData[players[socket.id].class].movementSpeed;
       players[socket.id].y += data.dy * classData[players[socket.id].class].movementSpeed;
+      console.log("Updated player position:", players[socket.id]);
     }
   });
     
