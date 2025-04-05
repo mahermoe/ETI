@@ -15,57 +15,57 @@ let players = {};
 let bullets = [];
 
 const classData = {
-    pistol: {
-      bulletSpeed: 10,
-      bulletDmg: 20,
-      hitbox: 5,
-      movementSpeed: 5,
-      bulletsPerShot: 1,
-      spread: 0,
-      fireRate: 500,     // milliseconds between shots (2 shots/sec)
-      autoFire: false     // must click each time
-    },
-    smg: {
-      bulletSpeed: 13,
-      bulletDmg: 10,
-      hitbox: 4,
-      movementSpeed: 6,
-      bulletsPerShot: 1,
-      spread: 0,
-      fireRate: 100,     // 10 shots/sec
-      autoFire: true     // hold mouse button
-    },
-    rifle: {
-      bulletSpeed: 15,
-      bulletDmg: 15,
-      hitbox: 5,
-      movementSpeed: 5,
-      bulletsPerShot: 1,
-      spread: 0,
-      fireRate: 500,     // 2 shots/sec
-      autoFire: false
-    },
-    sniper: {
-      bulletSpeed: 25,
-      bulletDmg: 100,
-      hitbox: 6,
-      movementSpeed: 4,
-      bulletsPerShot: 1,
-      spread: 0,
-      fireRate: 1200,    // 0.8 shots/sec
-      autoFire: false
-    },
-    shotgun: {
-      bulletSpeed: 8,
-      bulletDmg: 10,
-      hitbox: 5,
-      movementSpeed: 4,
-      bulletsPerShot: 5,
-      spread: 15,
-      fireRate: 1000,    // 1 shot/sec
-      autoFire: false
-    }
-  };
+  pistol: {
+    bulletSpeed: 10,
+    bulletDmg: 20,
+    hitbox: 5,
+    movementSpeed: 5,
+    bulletsPerShot: 1,
+    spread: 0,
+    fireRate: 500,     // milliseconds between shots (2 shots/sec)
+    autoFire: false     // must click each time
+  },
+  smg: {
+    bulletSpeed: 13,
+    bulletDmg: 10,
+    hitbox: 4,
+    movementSpeed: 6,
+    bulletsPerShot: 1,
+    spread: 0,
+    fireRate: 100,     // 10 shots/sec
+    autoFire: true     // hold mouse button
+  },
+  rifle: {
+    bulletSpeed: 15,
+    bulletDmg: 15,
+    hitbox: 5,
+    movementSpeed: 5,
+    bulletsPerShot: 1,
+    spread: 0,
+    fireRate: 500,     // 2 shots/sec
+    autoFire: false
+  },
+  sniper: {
+    bulletSpeed: 25,
+    bulletDmg: 100,
+    hitbox: 6,
+    movementSpeed: 4,
+    bulletsPerShot: 1,
+    spread: 0,
+    fireRate: 1200,    // 0.8 shots/sec
+    autoFire: false
+  },
+  shotgun: {
+    bulletSpeed: 8,
+    bulletDmg: 10,
+    hitbox: 5,
+    movementSpeed: 4,
+    bulletsPerShot: 5,
+    spread: 15,
+    fireRate: 1000,    // 1 shot/sec
+    autoFire: false
+  }
+};
   
 
 server.listen(2000, () => {
@@ -80,10 +80,12 @@ io.on('connection', (socket) => {
   players[socket.id] = {
     x: 0,
     y: 0,
+    cannonX: 0,
+    cannonY: 0,
     name: "",
     xp: 0,
     hp: 100,
-    class: "rifle",
+    class: "pistol",
     spawned: false,
   };
 
@@ -91,7 +93,7 @@ io.on('connection', (socket) => {
     if (players[socket.id]) {
       players[socket.id].name = playerName;
       console.log(`Socket registered: ${playerName} (ID: ${socket.id})`);
-      socket.emit('registerSuccess', playerName);
+      socket.emit('registerSuccess', playerName, socket.id);
       
       console.log(`Registered ${playerName} as ${players[socket.id].class}`);
       players[socket.id].spawned = true;
@@ -102,6 +104,14 @@ io.on('connection', (socket) => {
     if (players[socket.id]) {
       players[socket.id].x += data.dx * classData[players[socket.id].class].movementSpeed;
       players[socket.id].y += data.dy * classData[players[socket.id].class].movementSpeed;
+    }
+  });
+
+  socket.on('cannonmove', (data)=> {
+    const player = players[socket.id];
+    if (player && player.spawned) {
+      player.cannonX = data.cannonX;
+      player.cannonY = data.cannonY;
     }
   });
 
@@ -117,7 +127,7 @@ io.on('connection', (socket) => {
       return; // Too soon to shoot again
     }
   
-    lastShotTime[socket.id] = now; // ✅ Update last fire time
+    lastShotTime[socket.id] = now; // Update last fire time
   
     const dxRaw = data.mouseX - player.x;
     const dyRaw = data.mouseY - player.y;
@@ -150,7 +160,7 @@ io.on('connection', (socket) => {
   
   
 
-  socket.on('disconnect', () => {
+socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
     delete players[socket.id];
   });
