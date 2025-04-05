@@ -6,6 +6,7 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+const lastShotTime = {};
 
 app.use(express.static(path.join(__dirname, '../Client')));
 app.use(express.json());
@@ -14,13 +15,58 @@ let players = {};
 let bullets = [];
 
 const classData = {
-  pistol: {
-    bulletSpeed: 10,
-    bulletDmg: 20,
-    hitbox: 5,
-    movementSpeed: 5
-  }
-};
+    pistol: {
+      bulletSpeed: 10,
+      bulletDmg: 20,
+      hitbox: 5,
+      movementSpeed: 5,
+      bulletsPerShot: 1,
+      spread: 0,
+      fireRate: 500,     // milliseconds between shots (2 shots/sec)
+      autoFire: false     // must click each time
+    },
+    smg: {
+      bulletSpeed: 13,
+      bulletDmg: 10,
+      hitbox: 4,
+      movementSpeed: 6,
+      bulletsPerShot: 1,
+      spread: 0,
+      fireRate: 100,     // 10 shots/sec
+      autoFire: true     // hold mouse button
+    },
+    rifle: {
+      bulletSpeed: 15,
+      bulletDmg: 15,
+      hitbox: 5,
+      movementSpeed: 5,
+      bulletsPerShot: 1,
+      spread: 0,
+      fireRate: 500,     // 2 shots/sec
+      autoFire: false
+    },
+    sniper: {
+      bulletSpeed: 25,
+      bulletDmg: 100,
+      hitbox: 6,
+      movementSpeed: 4,
+      bulletsPerShot: 1,
+      spread: 0,
+      fireRate: 1200,    // 0.8 shots/sec
+      autoFire: false
+    },
+    shotgun: {
+      bulletSpeed: 8,
+      bulletDmg: 10,
+      hitbox: 5,
+      movementSpeed: 4,
+      bulletsPerShot: 5,
+      spread: 15,
+      fireRate: 1000,    // 1 shot/sec
+      autoFire: false
+    }
+  };
+  
 
 server.listen(2000, () => {
   console.log('Server is up on http://localhost:2000');
@@ -37,7 +83,7 @@ io.on('connection', (socket) => {
     name: "",
     xp: 0,
     hp: 100,
-    class: "pistol",
+    class: "rifle",
     spawned: false,
   };
 
@@ -46,6 +92,8 @@ io.on('connection', (socket) => {
       players[socket.id].name = playerName;
       console.log(`Socket registered: ${playerName} (ID: ${socket.id})`);
       socket.emit('registerSuccess', playerName);
+      
+      console.log(`Registered ${playerName} as ${players[socket.id].class}`);
       players[socket.id].spawned = true;
     }
   });
@@ -59,30 +107,48 @@ io.on('connection', (socket) => {
 
   socket.on('shoot', (data) => {
     const player = players[socket.id];
-    if (player && player.spawned) {
-      const bulletSpeed = classData[player.class].bulletSpeed;
-
-      let dx = data.mouseX - player.x;
-      let dy = data.mouseY - player.y;
-
-      const length = Math.sqrt(dx * dx + dy * dy);
-      if (length === 0) return;
-
-      dx = (dx / length) * bulletSpeed;
-      dy = (dy / length) * bulletSpeed;
-
+    if (!player || !player.spawned) return;
+  
+    const weapon = classData[player.class];
+    const now = Date.now();
+  
+    // Check fire cooldown
+    if (lastShotTime[socket.id] && now - lastShotTime[socket.id] < weapon.fireRate) {
+      return; // Too soon to shoot again
+    }
+  
+    lastShotTime[socket.id] = now; // ✅ Update last fire time
+  
+    const dxRaw = data.mouseX - player.x;
+    const dyRaw = data.mouseY - player.y;
+    const angle = Math.atan2(dyRaw, dxRaw);
+    const bulletSpeed = weapon.bulletSpeed;
+  
+    for (let i = 0; i < weapon.bulletsPerShot; i++) {
+      let spreadAngle = angle;
+  
+      if (weapon.spread > 0 && weapon.bulletsPerShot > 1) {
+        const spreadOffset = (Math.random() - 0.5) * weapon.spread * (Math.PI / 180);
+        spreadAngle += spreadOffset;
+      }
+  
+      const dx = Math.cos(spreadAngle) * bulletSpeed;
+      const dy = Math.sin(spreadAngle) * bulletSpeed;
+  
       bullets.push({
         x: player.x,
         y: player.y,
         dx,
         dy,
         owner: socket.id,
-        class: player.class,
+        class: player.class
       });
-
-      console.log(`${player.name} shot: velocity { dx: ${dx.toFixed(2)}, dy: ${dy.toFixed(2)} }`);
     }
+  
+    console.log(`[${player.class}] ${player.name} fired`);
   });
+  
+  
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);

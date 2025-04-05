@@ -1,8 +1,19 @@
 import socket from "./socket.js";
 
 
+const fireRates = {
+    pistol: 400,
+    smg: 100,
+    rifle: 250,
+    sniper: 1000,
+    shotgun: 700,
+  };
+
 let myId = null; // Store the player's ID
 let bullets = []; // Array to hold bullet objects   
+let mouseDown = false;
+let lastShotTime = 0;
+let lastMousePos = null;
 
 socket.on("yourId", (id) => {
   myId = id; // Store the player's ID when received from the server
@@ -63,6 +74,29 @@ const players = {};
 const lerpFactor = 0.1; // Controls smooth movement
 let zoom = 2;
 
+canvas.addEventListener("mousedown", () => {
+    mouseDown = true;
+  });
+  
+  canvas.addEventListener("mouseup", () => {
+    mouseDown = false;
+  });
+  
+  canvas.addEventListener("mousemove", (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (event.clientX - rect.left) / zoom;
+    const mouseY = (event.clientY - rect.top) / zoom;
+  
+    const player = players[myId];
+    if (!player) return;
+  
+    lastMousePos = {
+      mouseX: mouseX - canvas.width / (2 * zoom) + player.x,
+      mouseY: mouseY - canvas.height / (2 * zoom) + player.y
+    };
+  });
+  
+
 let keys = {
     w: false,
     a: false,
@@ -78,6 +112,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 canvas.addEventListener("click", (event) => {
+    
     if (!myId || !players[myId]) return;
   
     const rect = canvas.getBoundingClientRect();
@@ -90,6 +125,7 @@ canvas.addEventListener("click", (event) => {
       mouseX: mouseX - canvas.width / (2 * zoom) + player.x,
       mouseY: mouseY - canvas.height / (2 * zoom) + player.y,
     });
+    
   });
   
 document.addEventListener("keyup", (event) => {
@@ -114,7 +150,27 @@ function updateMovement() {
     
     setTimeout(updateMovement, 1000 / 60); // 60 FPS movement update
 }
+function handleAutoFire() {
+    const player = players[myId];
+    if (!player || !lastMousePos || !mouseDown) {
+      setTimeout(handleAutoFire, 1000 / 60);
+      return;
+    }
+  
+    const weaponClass = player.class || "pistol";
+    const rate = fireRates[weaponClass] || 400;
+    const now = Date.now();
+  
+    if (now - lastShotTime >= rate) {
+      socket.emit("shoot", lastMousePos);
+      lastShotTime = now;
+    }
+  
+    setTimeout(handleAutoFire, 1000 / 60);
+  }
+  
 updateMovement();
+handleAutoFire();
 
 // Smoothly update player positions
 socket.on("state", (data) => {
@@ -125,6 +181,7 @@ socket.on("state", (data) => {
                 x: data.players[id].x, 
                 y: data.players[id].y, 
                 name: data.players[id].name,
+                class: data.players[id].class, // shows weapon class
                 
             };
         }
@@ -194,6 +251,8 @@ function drawGame() {
         context.fillStyle = "black";
         context.font = "12px Arial";
         context.fillText(player.name || "?", player.x - 15, player.y - 15);
+        context.fillText(player.class || "?", player.x - 15, player.y - 30); // 👈 shows weapon class
+
     
     }
 
