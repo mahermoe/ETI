@@ -2,6 +2,7 @@ import socket from "./socket.js";
 
 
 let myId = null; // Store the player's ID
+let bullets = []; // Array to hold bullet objects   
 
 socket.on("yourId", (id) => {
   myId = id; // Store the player's ID when received from the server
@@ -76,6 +77,21 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
+canvas.addEventListener("click", (event) => {
+    if (!myId || !players[myId]) return;
+  
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (event.clientX - rect.left) / zoom;
+    const mouseY = (event.clientY - rect.top) / zoom;
+  
+    const player = players[myId];
+  
+    socket.emit("shoot", {
+      mouseX: mouseX - canvas.width / (2 * zoom) + player.x,
+      mouseY: mouseY - canvas.height / (2 * zoom) + player.y,
+    });
+  });
+  
 document.addEventListener("keyup", (event) => {
     if (keys[event.key] !== undefined) {
         keys[event.key] = false;
@@ -102,12 +118,14 @@ updateMovement();
 
 // Smoothly update player positions
 socket.on("state", (data) => {
+    bullets = data.bullets || []; //Sync Bullets
     for (const id in data.players) {
         if (!players[id]) {
             players[id] = { 
                 x: data.players[id].x, 
                 y: data.players[id].y, 
-                name: data.players[id].name
+                name: data.players[id].name,
+                
             };
         }
         
@@ -133,6 +151,7 @@ function drawGame() {
 
     const currentPlayer = players[myId];
   if (currentPlayer) {
+
     // Shift the canvas to center the player
     const offsetX = canvas.width / (2 * zoom) - currentPlayer.x;
     const offsetY = canvas.height / (2 * zoom) - currentPlayer.y;
@@ -178,7 +197,17 @@ function drawGame() {
     
     }
 
+    // Draw all bullets
+    bullets.forEach((b) => {
+    context.fillStyle = "black";
+    context.beginPath();
+    context.arc(b.x, b.y, 4, 0, Math.PI * 2); // small circle
+    context.fill();
+    });
+  
+
     context.restore(); // Restore canvas state
+
 
     requestAnimationFrame(drawGame); // Continue rendering on next frame
 }
