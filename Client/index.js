@@ -55,6 +55,26 @@ window.submitName = submitName; // Make the function globally accessible
 const canvas = document.getElementById('gameCanvas');
 const context = canvas.getContext('2d');
 
+function resizeCanvas() {
+    const fixedWidth = 1920;
+    const fixedHeight = 1080;
+
+    // Set internal resolution (won't change with zoom)
+    canvas.width = fixedWidth;
+    canvas.height = fixedHeight;
+
+    // Scale canvas visually to fit window size
+    const scaleX = window.innerWidth / fixedWidth;
+    const scaleY = window.innerHeight / fixedHeight;
+    const scale = Math.min(scaleX, scaleY);
+
+    canvas.style.width = `${fixedWidth * scale}px`;
+    canvas.style.height = `${fixedHeight * scale}px`;
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // Call once initially
+
 const players = {};
 let bullets = []; // Array to hold bullet objects   
 let mouseDown = false;
@@ -85,12 +105,17 @@ canvas.addEventListener("mousemove", (event) => {
     if (!myId || !players[myId]) return;
 
     const rect = canvas.getBoundingClientRect();
-    mouseScreenX = (event.clientX - rect.left) / zoom;
-    mouseScreenY = (event.clientY - rect.top) / zoom;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    mouseScreenX = (event.clientX - rect.left) * scaleX / zoom;
+    mouseScreenY = (event.clientY - rect.top) * scaleY / zoom;
 
     socket.emit("cannonmove", {
         cannonX: mouseScreenX,
-        cannonY: mouseScreenY
+        cannonY: mouseScreenY,
+        canvasWidth: canvas.width,
+        canvasHeight: canvas.height
     });
 });
 
@@ -99,8 +124,8 @@ canvas.addEventListener("click", (event) => {
   
     const player = players[myId];
 
-    mouseWorldX = mouseScreenX - canvas.width / (2 * zoom) + player.x;
-    mouseWorldY = mouseScreenY - canvas.height / (2 * zoom) + player.y;
+    // mouseWorldX = mouseScreenX - canvas.width / (2 * zoom) + player.x;
+    // mouseWorldY = mouseScreenY - canvas.height / (2 * zoom) + player.y;
   
     socket.emit("shoot", {
       mouseX: mouseWorldX,
@@ -114,8 +139,8 @@ function handleAutoFire() {
   
     const player = players[myId];
 
-    mouseWorldX = mouseScreenX - canvas.width / (2 * zoom) + player.x;
-    mouseWorldY = mouseScreenY - canvas.height / (2 * zoom) + player.y;
+    // mouseWorldX = mouseScreenX - canvas.width / (2 * zoom) + player.x;
+    // mouseWorldY = mouseScreenY - canvas.height / (2 * zoom) + player.y;
   
     socket.emit("shoot", {
       mouseX: mouseWorldX,
@@ -179,7 +204,9 @@ socket.on("state", (data) => {
                 name: data.players[id].name,
                 class: data.players[id].class, // shows weapon class
                 cannonX: data.players[id].cannonX, // shows cannon direction
-                cannonY: data.players[id].cannonY
+                cannonY: data.players[id].cannonY,
+                canvasWidth: data.players[id].canvasWidth,
+                canvasHeight: data.players[id].canvasHeight
             };
         }
         
@@ -192,6 +219,8 @@ socket.on("state", (data) => {
         players[id].cannonX = data.players[id].cannonX;
         players[id].cannonY = data.players[id].cannonY;
         players[id].hp = data.players[id].hp;
+        players[id].canvasWidth = data.players[id].canvasWidth;
+        players[id].canvasHeight = data.players[id].canvasHeight;
     }
     
     // Remove players that are no longer in the data
@@ -202,7 +231,8 @@ socket.on("state", (data) => {
     }
 });
 
-
+const backgroundImage = new Image()
+backgroundImage.src = 'https://static.vecteezy.com/system/resources/previews/000/834/435/non_2x/beautiful-space-background-vector.jpg';
 
 // Render game
 function drawGame() {
@@ -217,25 +247,29 @@ function drawGame() {
         const offsetY = canvas.height / (2 * zoom) - currentPlayer.y;
         context.translate(offsetX, offsetY);
 
-        // Draw scrolling background grid
-        const gridSize = 50;
-        const startX = -offsetX % gridSize;
-        const startY = -offsetY % gridSize;
+        // Draw the background at 0,0 with full map size
+        context.drawImage(backgroundImage, 0, 0, 1470, 980);
 
-        context.strokeStyle = "#ddd";
-        for (let x = startX; x < canvas.width / zoom; x += gridSize) {
-            context.beginPath();
-            context.moveTo(x, 0);
-            context.lineTo(x, canvas.height / zoom);
-            context.stroke();
-        }
 
-        for (let y = startY; y < canvas.height / zoom; y += gridSize) {
-            context.beginPath();
-            context.moveTo(0, y);
-            context.lineTo(canvas.width / zoom, y);
-            context.stroke();
-        }
+        // // Draw scrolling background grid
+        // const gridSize = 50;
+        // const startX = -offsetX % gridSize;
+        // const startY = -offsetY % gridSize;
+
+        // context.strokeStyle = "#ddd";
+        // for (let x = startX; x < canvas.width / zoom; x += gridSize) {
+        //     context.beginPath();
+        //     context.moveTo(x, 0);
+        //     context.lineTo(x, canvas.height / zoom);
+        //     context.stroke();
+        // }
+
+        // for (let y = startY; y < canvas.height / zoom; y += gridSize) {
+        //     context.beginPath();
+        //     context.moveTo(0, y);
+        //     context.lineTo(canvas.width / zoom, y);
+        //     context.stroke();
+        // }
     }
 
     // Draw all players
@@ -256,16 +290,22 @@ function drawGame() {
         context.fillText(player.hp || "?", player.x - 15, player.y - 20);
 
         // Draw rotating cannon for all players
+        let remoteMouseWorldX, remoteMouseWorldY, dx, dy;
         if (id == myId){ // Get mouse data from client for client for more smoothness
             mouseWorldX = mouseScreenX - canvas.width / (2 * zoom) + player.x;
             mouseWorldY = mouseScreenY - canvas.height / (2 * zoom) + player.y;
+            dx = mouseWorldX - player.x;
+            dy = mouseWorldY - player.y;
         } else{
-            mouseWorldX = player.cannonX - canvas.width / (2 * zoom) + player.x;
-            mouseWorldY = player.cannonY - canvas.height / (2 * zoom) + player.y;
+            const remoteCanvasWidth = player.canvasWidth;
+            const remoteCanvasHeight = player.canvasHeight;
+
+            remoteMouseWorldX = player.cannonX - remoteCanvasWidth / (2 * zoom) + player.x;
+            remoteMouseWorldY = player.cannonY - remoteCanvasHeight / (2 * zoom) + player.y;
+            dx = remoteMouseWorldX - player.x;
+            dy = remoteMouseWorldY - player.y;
         }
 
-        const dx = mouseWorldX - player.x;
-        const dy = mouseWorldY - player.y;
         const angle = Math.atan2(dy, dx);
 
         const cannonLength = 20;

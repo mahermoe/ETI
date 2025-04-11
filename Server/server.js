@@ -82,6 +82,8 @@ io.on('connection', (socket) => {
     y: 0,
     cannonX: 0,
     cannonY: 0,
+    canvasWidth: 0,
+    canvasHeight: 0,
     name: "",
     xp: 0,
     hp: 100,
@@ -115,6 +117,8 @@ io.on('connection', (socket) => {
     if (player && player.spawned) {
       player.cannonX = data.cannonX;
       player.cannonY = data.cannonY;
+      player.canvasHeight = data.canvasHeight;
+      player.canvasWidth = data.canvasWidth;
     }
   });
 
