@@ -25,6 +25,22 @@ function showError(message) {
     }, 3000);
 }
 
+function updateHealthBar() {
+    const healthBar = document.getElementById("health-bar");
+  
+    let health = players[myId].hp; // Get's Players Health
+    healthBar.style.width = `${health}%`;
+  
+    if (health > 66) {
+      healthBar.style.backgroundColor = "#4caf50"; // green
+    } else if (health > 33) {
+      healthBar.style.backgroundColor = "#ff9800"; // orange
+    } else {
+      healthBar.style.backgroundColor = "#f44336"; // red
+    }
+
+  }
+
 // Register client to server
 function submitName() {
     const playerName = document.getElementById("player-name").value.trim();
@@ -221,6 +237,9 @@ socket.on("state", (data) => {
         players[id].hp = data.players[id].hp;
         players[id].canvasWidth = data.players[id].canvasWidth;
         players[id].canvasHeight = data.players[id].canvasHeight;
+
+        
+
     }
     
     // Remove players that are no longer in the data
@@ -229,6 +248,11 @@ socket.on("state", (data) => {
             delete players[id]; // Delete player if not in data.players
         }
     }
+
+    if (myId && players[myId]) {
+        updateHealthBar();
+    }
+
 });
 
 const backgroundImage = new Image()
