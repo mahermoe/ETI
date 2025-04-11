@@ -66,7 +66,7 @@ function resizeCanvas() {
     // Scale canvas visually to fit window size
     const scaleX = window.innerWidth / fixedWidth;
     const scaleY = window.innerHeight / fixedHeight;
-    const scale = Math.min(scaleX, scaleY);
+    const scale = Math.max(scaleX, scaleY);
 
     canvas.style.width = `${fixedWidth * scale}px`;
     canvas.style.height = `${fixedHeight * scale}px`;
