@@ -44,7 +44,7 @@ function submitName() {
         setTimeout(() => {
             document.getElementById("enterNameScreen").classList.add("hidden"); // Hide Name Screen
             document.getElementById("gameScreen").classList.remove("hidden");  // Show Game Screen
-        }, 1500);
+        }, 1000);
     });
 }
 
@@ -159,15 +159,23 @@ function updateMovement() {
   
 updateMovement();
 
-// Smoothly update player positions
+// Smoothly update player data/positions
 socket.on("state", (data) => {
     bullets = data.bullets || []; // Sync Bullets
+
+    // If player client isn't spawned and name screen is hidden, show name screen
+    if(!data.players[socket.id].spawned && document.getElementById("enterNameScreen").classList.contains("hidden")){ 
+        document.getElementById("enterNameScreen").classList.remove("hidden"); // Show Name Screen
+        document.getElementById("gameScreen").classList.add("hidden");  // Hide Game Screen
+    }
+
     for (const id in data.players) {
         if (!data.players[id].spawned) continue;
         if (!players[id]) {
             players[id] = { 
                 x: data.players[id].x, 
                 y: data.players[id].y, 
+                hp: data.players[id].hp,
                 name: data.players[id].name,
                 class: data.players[id].class, // shows weapon class
                 cannonX: data.players[id].cannonX, // shows cannon direction
@@ -179,18 +187,22 @@ socket.on("state", (data) => {
         players[id].x += (data.players[id].x - players[id].x) * lerpFactor;
         players[id].y += (data.players[id].y - players[id].y) * lerpFactor;
 
-        players[id].name = data.players[id].name; // Update player name
+        // Update player data
+        players[id].name = data.players[id].name;
         players[id].cannonX = data.players[id].cannonX;
         players[id].cannonY = data.players[id].cannonY;
+        players[id].hp = data.players[id].hp;
     }
     
     // Remove players that are no longer in the data
     for (const id in players) {
-        if (!data.players[id] || !data.players[i].spawned) {
+        if (!data.players[id] || !data.players[id].spawned) {
             delete players[id]; // Delete player if not in data.players
         }
     }
 });
+
+
 
 // Render game
 function drawGame() {
@@ -239,8 +251,9 @@ function drawGame() {
         // Draw player name/class above the circle
         context.fillStyle = "black";
         context.font = "12px Arial";
-        context.fillText(player.name || "?", player.x - 15, player.y - 35);
-        context.fillText(player.class || "?", player.x - 15, player.y - 20);
+        context.fillText(player.name || "?", player.x - 15, player.y - 50);
+        context.fillText(player.class || "?", player.x - 15, player.y - 35);
+        context.fillText(player.hp || "?", player.x - 15, player.y - 20);
 
         // Draw rotating cannon for all players
         if (id == myId){ // Get mouse data from client for client for more smoothness

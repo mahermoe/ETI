@@ -18,7 +18,7 @@ const classData = {
   pistol: {
     bulletSpeed: 10,
     bulletDmg: 20,
-    hitbox: 5,
+    hitbox: 15,
     movementSpeed: 5,
     bulletsPerShot: 1,
     spread: 0,
@@ -28,7 +28,7 @@ const classData = {
   smg: {
     bulletSpeed: 13,
     bulletDmg: 10,
-    hitbox: 4,
+    hitbox: 15,
     movementSpeed: 6,
     bulletsPerShot: 1,
     spread: 0,
@@ -38,7 +38,7 @@ const classData = {
   rifle: {
     bulletSpeed: 15,
     bulletDmg: 15,
-    hitbox: 5,
+    hitbox: 15,
     movementSpeed: 5,
     bulletsPerShot: 1,
     spread: 0,
@@ -48,7 +48,7 @@ const classData = {
   sniper: {
     bulletSpeed: 25,
     bulletDmg: 100,
-    hitbox: 6,
+    hitbox: 15,
     movementSpeed: 4,
     bulletsPerShot: 1,
     spread: 0,
@@ -58,7 +58,7 @@ const classData = {
   shotgun: {
     bulletSpeed: 8,
     bulletDmg: 10,
-    hitbox: 5,
+    hitbox: 15,
     movementSpeed: 4,
     bulletsPerShot: 5,
     spread: 15,
@@ -75,7 +75,7 @@ server.listen(2000, () => {
 io.on('connection', (socket) => {
   socket.emit("yourId", socket.id);
 
-  console.log('A user connected:', socket.id);
+  console.log('A socket user connected:', socket.id);
 
   players[socket.id] = {
     x: 0,
@@ -92,7 +92,10 @@ io.on('connection', (socket) => {
   socket.on('register', (playerName) => {
     if (players[socket.id]) {
       players[socket.id].name = playerName;
-      console.log(`Socket registered: ${playerName} (ID: ${socket.id})`);
+      players[socket.id].hp = 100;
+      players[socket.id].x = 0;
+      players[socket.id].y = 0;
+      console.log(`Player registered: ${playerName} (ID: ${socket.id})`);
       socket.emit('registerSuccess', playerName, socket.id);
       
       console.log(`Registered ${playerName} as ${players[socket.id].class}`);
@@ -157,22 +160,53 @@ io.on('connection', (socket) => {
   
     console.log(`[${player.class}] ${player.name} fired`);
   });
-  
-  
 
-socket.on('disconnect', () => {
+  socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
     delete players[socket.id];
   });
 });
 
+
+// Game Loop
 const framerate = 60;
 setInterval(() => {
   for (let i = bullets.length - 1; i >= 0; i--) {
-    bullets[i].x += bullets[i].dx;
-    bullets[i].y += bullets[i].dy;
+    const bullet = bullets[i];
+    bullet.x += bullet.dx;
+    bullet.y += bullet.dy;
 
+    let hit = false;
+
+    for (const id in players){
+      const target = players[id];
+      if (!target.spawned || id === bullet.owner) continue;
+
+      const dx = bullet.x - target.x;
+      const dy = bullet.y - target.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      const hitbox = classData[bullet.class].hitbox;
+
+      // If player within hitbox range dmg
+      if (dist <= hitbox){
+        target.hp -= classData[bullet.class].bulletDmg;
+        console.log(`${players[bullet.owner].name} hit ${target.name} for ${classData[bullet.class].bulletDmg} dmg`);
+        hit = true;
+
+        if (target.hp <= 0) { // Handle respawning if dead
+          target.hp = 0;
+          target.spawned = false;
+          console.log(`${target.name} was eliminated by ${players[bullet.owner].name}`);
+        }
+
+        break; // One hit per bullet
+      }
+    }
+
+    // Remove bullet if out of bounds or it hit somebody
     if (
+      hit ||
       bullets[i].x < -1000 || bullets[i].x > 3000 ||
       bullets[i].y < -1000 || bullets[i].y > 3000
     ) {
