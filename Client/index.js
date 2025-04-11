@@ -232,7 +232,8 @@ socket.on("state", (data) => {
 });
 
 const backgroundImage = new Image()
-backgroundImage.src = 'https://static.vecteezy.com/system/resources/previews/000/834/435/non_2x/beautiful-space-background-vector.jpg';
+// backgroundImage.src = 'https://static.vecteezy.com/system/resources/previews/000/834/435/non_2x/beautiful-space-background-vector.jpg';
+backgroundImage.src = 'https://img.freepik.com/premium-photo/grid-lines-background-with-white-background-white-grid-background_207225-3315.jpg';
 
 // Render game
 function drawGame() {
@@ -248,7 +249,7 @@ function drawGame() {
         context.translate(offsetX, offsetY);
 
         // Draw the background at 0,0 with full map size
-        context.drawImage(backgroundImage, 0, 0, 1470, 980);
+        context.drawImage(backgroundImage, 0, 0, 3000, 3000);
 
 
         // // Draw scrolling background grid

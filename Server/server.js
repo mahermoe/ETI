@@ -19,7 +19,7 @@ const classData = {
     bulletSpeed: 10,
     bulletDmg: 20,
     hitbox: 15,
-    movementSpeed: 5,
+    movementSpeed: 2,
     bulletsPerShot: 1,
     spread: 0,
     fireRate: 500,     // milliseconds between shots (2 shots/sec)
@@ -29,7 +29,7 @@ const classData = {
     bulletSpeed: 13,
     bulletDmg: 10,
     hitbox: 15,
-    movementSpeed: 6,
+    movementSpeed: 2,
     bulletsPerShot: 1,
     spread: 0,
     fireRate: 100,     // 10 shots/sec
@@ -39,7 +39,7 @@ const classData = {
     bulletSpeed: 15,
     bulletDmg: 15,
     hitbox: 15,
-    movementSpeed: 5,
+    movementSpeed: 2,
     bulletsPerShot: 1,
     spread: 0,
     fireRate: 500,     // 2 shots/sec
@@ -49,7 +49,7 @@ const classData = {
     bulletSpeed: 25,
     bulletDmg: 100,
     hitbox: 15,
-    movementSpeed: 4,
+    movementSpeed: 2,
     bulletsPerShot: 1,
     spread: 0,
     fireRate: 1200,    // 0.8 shots/sec
@@ -59,7 +59,7 @@ const classData = {
     bulletSpeed: 8,
     bulletDmg: 10,
     hitbox: 15,
-    movementSpeed: 4,
+    movementSpeed: 2,
     bulletsPerShot: 5,
     spread: 15,
     fireRate: 1000,    // 1 shot/sec
@@ -68,18 +68,16 @@ const classData = {
 };
   
 
-server.listen(2000, () => {
-  console.log('Server is up on http://localhost:2000');
+server.listen(2000, '0.0.0.0', () => {
+  console.log('Server is up on port 2000');
 });
 
 io.on('connection', (socket) => {
-  socket.emit("yourId", socket.id);
-
   console.log('A socket user connected:', socket.id);
 
   players[socket.id] = {
-    x: 0,
-    y: 0,
+    x: 1500,
+    y: 1500,
     cannonX: 0,
     cannonY: 0,
     canvasWidth: 0,
@@ -95,8 +93,8 @@ io.on('connection', (socket) => {
     if (players[socket.id]) {
       players[socket.id].name = playerName;
       players[socket.id].hp = 100;
-      players[socket.id].x = 0;
-      players[socket.id].y = 0;
+      players[socket.id].x = 1500;
+      players[socket.id].y = 1500;
       console.log(`Player registered: ${playerName} (ID: ${socket.id})`);
       socket.emit('registerSuccess', playerName, socket.id);
       
