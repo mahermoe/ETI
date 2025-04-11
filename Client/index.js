@@ -60,6 +60,7 @@ function submitName() {
         setTimeout(() => {
             document.getElementById("enterNameScreen").classList.add("hidden"); // Hide Name Screen
             document.getElementById("gameScreen").classList.remove("hidden");  // Show Game Screen
+            document.getElementById("status-bar-container").classList.remove("hidden");  // Show Healthbar
         }, 1000);
     });
 }
@@ -234,6 +235,7 @@ socket.on("state", (data) => {
     if(!data.players[socket.id].spawned && document.getElementById("enterNameScreen").classList.contains("hidden")){ 
         document.getElementById("enterNameScreen").classList.remove("hidden"); // Show Name Screen
         document.getElementById("gameScreen").classList.add("hidden");  // Hide Game Screen
+        document.getElementById("status-bar-container").classList.add("hidden");  // Hide Healthbar
     }
 
     for (const id in data.players) {
