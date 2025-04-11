@@ -342,6 +342,20 @@ function drawGame() {
         context.fillText(player.class || "?", player.x - 15, player.y - 35);
         context.fillText(player.hp || "?", player.x - 15, player.y - 20);
 
+        // Draw healthbar above each player
+        const barWidth = 40;
+        const barHeight = 6;
+        const hpPercent = Math.max(player.hp / 100, 0);
+        const barX = player.x - barWidth / 2;
+        const barY = player.y - 20;
+
+        // Healthbar outerbox
+        context.fillStyle = "gray";
+        context.fillRect(barX, barY, barWidth, barHeight);
+        // Healthbar innerbox (colored)
+        context.fillStyle = hpPercent > 0.66 ? "green" : hpPercent > 0.33 ? "orange" : "red";
+        context.fillRect(barX, barY, barWidth * hpPercent, barHeight);
+
         // Draw rotating cannon for all players
         let remoteMouseWorldX, remoteMouseWorldY, dx, dy;
         if (id == myId){ // Get mouse data from client for client for more smoothness
