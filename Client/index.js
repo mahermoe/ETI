@@ -106,7 +106,20 @@ let keys = {
     s: false,
     d: false,
 };
+//  Loot Boxes
+const lootBoxes = [
+    { x: 200, y: 200, width: 30, height: 30, contents: ["Shield", "XP"], collected: false },
+    { x: 130, y: 130, width: 30, height: 30, contents: ["Med Kit"], collected: false },
+    { x: 150, y: 150, width: 30, height: 30, contents: ["Ammo", "XP"], collected: false },
+    { x: 100, y: 100, width: 30, height: 30, contents: ["Test"], collected: false },
 
+];
+
+function isPlayerNearLootBox(player, box) {
+    const dx = player.x - (box.x + box.width / 2);
+    const dy = player.y - (box.y + box.height / 2);
+    return Math.sqrt(dx * dx + dy * dy) < 50;
+}
 // ----------------Capture mouse events---------------- \\
 canvas.addEventListener("mousedown", () => {
     mouseDown = true;
@@ -172,6 +185,19 @@ function handleAutoFire() {
 document.addEventListener("keydown", (event) => {
     if (keys[event.key] !== undefined) {
         keys[event.key] = true;
+    }
+
+    // Loot Box Interaction
+    if ((event.key === 'e' || event.key === 'E') && myId && players[myId]) {
+        const player = players[myId];
+        lootBoxes.forEach(box => {
+            if (!box.collected && isPlayerNearLootBox(player, box)) {
+                box.collected = true;
+                addToInventory(box.contents);
+                showSuccess(`You collected: ${box.contents.join(", ")}`);
+                console.log(`Collected loot: ${box.contents.join(", ")}`);
+            }
+        });
     }
 });
   
@@ -343,7 +369,16 @@ function drawGame() {
         context.fillRect(0, -cannonWidth / 2, cannonLength, cannonWidth); // Draw cannon
         context.restore();
     }
-
+// Draw loot boxes
+lootBoxes.forEach(box => {
+    if (!box.collected) {
+        context.fillStyle = "gold";
+        context.fillRect(box.x, box.y, box.width, box.height);
+        context.fillStyle = "black";
+        context.font = "10px Arial";
+        context.fillText("Loot", box.x + 2, box.y - 5);
+    }
+});
     // Draw all bullets
     bullets.forEach((b) => {
         context.fillStyle = "black";
