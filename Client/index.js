@@ -25,22 +25,6 @@ function showError(message) {
     }, 3000);
 }
 
-function updateHealthBar() {
-    const healthBar = document.getElementById("health-bar");
-  
-    let health = players[myId].hp; // Get's Players Health
-    healthBar.style.width = `${health}%`;
-  
-    if (health > 66) {
-      healthBar.style.backgroundColor = "#4caf50"; // green
-    } else if (health > 33) {
-      healthBar.style.backgroundColor = "#ff9800"; // orange
-    } else {
-      healthBar.style.backgroundColor = "#f44336"; // red
-    }
-
-  }
-
 // Register client to server
 function submitName() {
     const playerName = document.getElementById("player-name").value.trim();
@@ -61,6 +45,7 @@ function submitName() {
             document.getElementById("enterNameScreen").classList.add("hidden"); // Hide Name Screen
             document.getElementById("gameScreen").classList.remove("hidden");  // Show Game Screen
             document.getElementById("status-bar-container").classList.remove("hidden");  // Show Healthbar
+            document.getElementById("xp-bar-container").classList.remove("hidden");  // Show Xp bar
         }, 1000);
     });
 }
@@ -94,6 +79,7 @@ resizeCanvas(); // Call once initially
 
 const players = {};
 let bullets = []; // Array to hold bullet objects   
+let npcs = {};
 let mouseDown = false;
 let mouseWorldX = 0; // Calculated each frame based on player position and mouse screen position
 let mouseWorldY = 0;
@@ -107,6 +93,7 @@ let keys = {
     s: false,
     d: false,
 };
+
 //  Loot Boxes
 const lootBoxes = [
     { x: 200, y: 200, width: 30, height: 30, contents: ["Shield", "XP"], collected: false },
@@ -121,7 +108,8 @@ function isPlayerNearLootBox(player, box) {
     const dy = player.y - (box.y + box.height / 2);
     return Math.sqrt(dx * dx + dy * dy) < 50;
 }
-// ----------------Capture mouse events---------------- \\
+
+// ---------------- Capture mouse events ---------------- \\
 canvas.addEventListener("mousedown", () => {
     mouseDown = true;
     handleAutoFire();
@@ -182,7 +170,7 @@ function handleAutoFire() {
     }
 }
 
-// ----------------Capture key events---------------- \\
+// ------------------- Capture key events ------------------- \\
 document.addEventListener("keydown", (event) => {
     if (keys[event.key] !== undefined) {
         keys[event.key] = true;
@@ -208,7 +196,36 @@ document.addEventListener("keyup", (event) => {
     }
 });
 
-// Send movement updates to server
+// ------------------------- Update UI ------------------------- \\
+function updateHealthBar() {
+    const healthBar = document.getElementById("health-bar");
+    const healthText = document.getElementById("health-text")
+  
+    let health = players[myId].hp; // Get's Players Health
+    healthBar.style.width = `${health}%`;
+  
+    if (health > 66) {
+      healthBar.style.backgroundColor = "#4caf50"; // green
+    } else if (health > 33) {
+      healthBar.style.backgroundColor = "#ff9800"; // orange
+    } else {
+      healthBar.style.backgroundColor = "#f44336"; // red
+    }
+
+    healthText.textContent = `${Math.round((players[myId].hp * 10)) / 10}/100 HP`
+}
+
+function updateXPBar() {
+    const xpBar = document.getElementById('xp-bar');
+    const xpText = document.getElementById('xp-text');
+    const xpMax = players[myId].level * 100;
+  
+    const percentage = Math.min(100, (players[myId].xp / xpMax) * 100);
+    xpBar.style.width = `${percentage}%`;
+    xpText.textContent = `Level ${players[myId].level}: ${players[myId].xp}/${(xpMax)} XP`;
+}
+
+// ------------------------- Send Movement to Server ------------------------- \\
 function updateMovement() {
     let dx = 0, dy = 0;
     
@@ -227,15 +244,17 @@ function updateMovement() {
   
 updateMovement();
 
-// Smoothly update player data/positions
+// ------------------------- Recieve Data from Server ------------------------- \\
 socket.on("state", (data) => {
     bullets = data.bullets || []; // Sync Bullets
+    npcs = data.npcs || {}; // Sync Npcs
 
     // If player client isn't spawned and name screen is hidden, show name screen
     if(!data.players[socket.id].spawned && document.getElementById("enterNameScreen").classList.contains("hidden")){ 
         document.getElementById("enterNameScreen").classList.remove("hidden"); // Show Name Screen
         document.getElementById("gameScreen").classList.add("hidden");  // Hide Game Screen
         document.getElementById("status-bar-container").classList.add("hidden");  // Hide Healthbar
+        document.getElementById("xp-bar-container").classList.add("hidden");  // Hide Xp bar
     }
 
     for (const id in data.players) {
@@ -245,6 +264,8 @@ socket.on("state", (data) => {
                 x: data.players[id].x, 
                 y: data.players[id].y, 
                 hp: data.players[id].hp,
+                xp: data.players[id].xp,
+                level: data.players[id].level,
                 name: data.players[id].name,
                 class: data.players[id].class, // shows weapon class
                 cannonX: data.players[id].cannonX, // shows cannon direction
@@ -263,11 +284,10 @@ socket.on("state", (data) => {
         players[id].cannonX = data.players[id].cannonX;
         players[id].cannonY = data.players[id].cannonY;
         players[id].hp = data.players[id].hp;
+        players[id].xp = data.players[id].xp;
+        players[id].level = data.players[id].level;
         players[id].canvasWidth = data.players[id].canvasWidth;
         players[id].canvasHeight = data.players[id].canvasHeight;
-
-        
-
     }
     
     // Remove players that are no longer in the data
@@ -279,15 +299,15 @@ socket.on("state", (data) => {
 
     if (myId && players[myId]) {
         updateHealthBar();
+        updateXPBar();
     }
-
 });
 
+// ------------------------- Render Game ------------------------- \\
+
 const backgroundImage = new Image()
-// backgroundImage.src = 'https://static.vecteezy.com/system/resources/previews/000/834/435/non_2x/beautiful-space-background-vector.jpg';
 backgroundImage.src = 'https://img.freepik.com/premium-photo/grid-lines-background-with-white-background-white-grid-background_207225-3315.jpg';
 
-// Render game
 function drawGame() {
     context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
     context.save(); // Save canvas state
@@ -302,27 +322,6 @@ function drawGame() {
 
         // Draw the background at 0,0 with full map size
         context.drawImage(backgroundImage, 0, 0, 3000, 3000);
-
-
-        // // Draw scrolling background grid
-        // const gridSize = 50;
-        // const startX = -offsetX % gridSize;
-        // const startY = -offsetY % gridSize;
-
-        // context.strokeStyle = "#ddd";
-        // for (let x = startX; x < canvas.width / zoom; x += gridSize) {
-        //     context.beginPath();
-        //     context.moveTo(x, 0);
-        //     context.lineTo(x, canvas.height / zoom);
-        //     context.stroke();
-        // }
-
-        // for (let y = startY; y < canvas.height / zoom; y += gridSize) {
-        //     context.beginPath();
-        //     context.moveTo(0, y);
-        //     context.lineTo(canvas.width / zoom, y);
-        //     context.stroke();
-        // }
     }
 
     // Draw all players
@@ -340,14 +339,13 @@ function drawGame() {
         context.font = "12px Arial";
         context.fillText(player.name || "?", player.x - 15, player.y - 50);
         context.fillText(player.class || "?", player.x - 15, player.y - 35);
-        context.fillText(player.hp || "?", player.x - 15, player.y - 20);
 
         // Draw healthbar above each player
         const barWidth = 40;
         const barHeight = 6;
         const hpPercent = Math.max(player.hp / 100, 0);
         const barX = player.x - barWidth / 2;
-        const barY = player.y - 20;
+        const barY = player.y - 30;
 
         // Healthbar outerbox
         context.fillStyle = "gray";
@@ -385,16 +383,18 @@ function drawGame() {
         context.fillRect(0, -cannonWidth / 2, cannonLength, cannonWidth); // Draw cannon
         context.restore();
     }
-// Draw loot boxes
-lootBoxes.forEach(box => {
-    if (!box.collected) {
-        context.fillStyle = "gold";
-        context.fillRect(box.x, box.y, box.width, box.height);
-        context.fillStyle = "black";
-        context.font = "10px Arial";
-        context.fillText("Loot", box.x + 2, box.y - 5);
-    }
-});
+    
+    // Draw loot boxes
+    lootBoxes.forEach(box => {
+        if (!box.collected) {
+            context.fillStyle = "gold";
+            context.fillRect(box.x, box.y, box.width, box.height);
+            context.fillStyle = "black";
+            context.font = "10px Arial";
+            context.fillText("Loot", box.x + 2, box.y - 5);
+        }
+    });
+
     // Draw all bullets
     bullets.forEach((b) => {
         context.fillStyle = "black";
@@ -402,6 +402,29 @@ lootBoxes.forEach(box => {
         context.arc(b.x, b.y, 4, 0, Math.PI * 2); // small circle, do players[i].location for better aligning
         context.fill();
     });
+
+    // Draw all npcs
+    for (const id in npcs){
+        const npc = npcs[id];
+
+        // Draw npc as square
+        context.fillStyle = npc.color;
+        context.fillRect(npc.x - 10, npc.y - 10, 20, 20);
+
+        // Draw npc hp bar
+        const barWidth = 40;
+        const barHeight = 6;
+        const hpPercent = Math.max(npc.hp / 100, 0);
+        const barX = npc.x - barWidth / 2;
+        const barY = npc.y - 20;
+
+        // -- Healthbar outerbox
+        context.fillStyle = "gray";
+        context.fillRect(barX, barY, barWidth, barHeight);
+        // -- Healthbar innerbox (colored)
+        context.fillStyle = hpPercent > 0.66 ? "green" : hpPercent > 0.33 ? "orange" : "red";
+        context.fillRect(barX, barY, barWidth * hpPercent, barHeight);
+    }
   
 
     context.restore(); // Restore canvas state

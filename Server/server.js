@@ -13,6 +13,8 @@ app.use(express.json());
 
 let players = {};
 let bullets = [];
+let npcs = {};
+let colors = ["yellow", "blue", "purple"];
 
 const classData = {
   pistol: {
@@ -83,8 +85,12 @@ io.on('connection', (socket) => {
     canvasWidth: 0,
     canvasHeight: 0,
     name: "",
+    level: 1,
     xp: 0,
     hp: 100,
+    armor: 0,
+    maxArmor: 0,
+    healthRegen: 0.3,
     class: "pistol",
     spawned: false,
   };
@@ -167,19 +173,59 @@ io.on('connection', (socket) => {
     console.log('User disconnected:', socket.id);
     delete players[socket.id];
   });
-});
+}); //-------------------------- End of Sockets //--------------------------\\
 
+// Player Health Regen every 2 seconds
+function doHealthRegen(){
+  for (const id in players){
+    if (players[id].hp < 100){
+      players[id].hp += players[id].healthRegen;
+    }
+    if (players[id].hp > 100){
+      players[id].hp = 100;
+    }
+  }
+  setTimeout(doHealthRegen, 2000);
+}
+doHealthRegen() // Initial Call
+
+function spawnRandomNPC(){
+  if (Object.keys(npcs).length < 100){ // Don't spawn npc if amount >= 100
+    const id = "npc_" + Date.now(); // Unique id based on time
+    npcs[id] = {
+      x: Math.floor(Math.random() * 3000), // Random spawn location
+      y: Math.floor(Math.random() * 3000),
+      color: colors[Math.floor(Math.random() * colors.length)], // Random color from colors array
+      hp: 100
+    }
+    console.log(`Spawned NPC ${id} at (${npcs[id].x}, ${npcs[id].y})`);
+  }
+  setTimeout(spawnRandomNPC, 1000); // Spawn npcs every 1 second
+}
+spawnRandomNPC(); // Initial Npc spawn
+
+function giveXp(player, xp){
+  player.xp += xp;
+  while (player.xp >= player.level * 100){ // Check if xp exceeds xp max (level * 100), carry over xp
+    player.xp -= player.level * 100;
+    player.level++;
+  }
+}
 
 // Game Loop
 const framerate = 60;
 setInterval(() => {
+  // Bullet Server Logic
   for (let i = bullets.length - 1; i >= 0; i--) {
     const bullet = bullets[i];
+
+    // Bullet Movement
     bullet.x += bullet.dx;
     bullet.y += bullet.dy;
 
     let hit = false;
 
+    // Bullet Damaging Players
     for (const id in players){
       const target = players[id];
       if (!target.spawned || id === bullet.owner) continue;
@@ -190,9 +236,21 @@ setInterval(() => {
 
       const hitbox = classData[bullet.class].hitbox;
 
-      // If player within hitbox range dmg
+      // If player within hitbox range do damage
       if (dist <= hitbox){
-        target.hp -= classData[bullet.class].bulletDmg;
+        let dmg = classData[bullet.class].bulletDmg;
+
+        // Damage Player Armor
+        if(target.armor > 0){
+          const armorDamage = Math.min(target.armor, dmg);
+          target.armor -= armorDamage;
+          dmg -= armorDamage;
+        }
+        // Damage Player Health
+        if (dmg > 0){
+          target.hp -= dmg;
+        }
+
         console.log(`${players[bullet.owner].name} hit ${target.name} for ${classData[bullet.class].bulletDmg} dmg`);
         hit = true;
 
@@ -206,11 +264,38 @@ setInterval(() => {
       }
     }
 
+    for (const npcId in npcs){
+      const npcTarget = npcs[npcId];
+      if (hit) break;
+      if (npcTarget.hp <= 0) continue;
+
+      const dx = bullet.x - npcTarget.x;
+      const dy = bullet.y - npcTarget.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const hitbox = classData[bullet.class].hitbox;
+
+      // Damage NPC Health
+      if (dist <= hitbox){
+        npcTarget.hp -= classData[bullet.class].bulletDmg;
+        console.log(`${players[bullet.owner].name} hit NPC ${npcId} for ${classData[bullet.class].bulletDmg} dmg`);
+        hit = true;
+
+        // NPC Death -- Give Player XP -- Remove NPC
+        if (npcTarget.hp <= 0){
+          let xpForKill = npcTarget.color === "yellow" ? 75 : npcTarget.color === "blue" ? 200 : npcTarget.color === "purple" ? 500 : 0;
+          giveXp(players[bullet.owner], xpForKill);
+          console.log(`${players[bullet.owner].name} killed NPC ${npcId} and earned ${xpForKill} XP!`);
+          delete npcs[npcId];
+        }
+        break;
+      }
+    }
+
     // Remove bullet if out of bounds or it hit somebody
     if (
       hit ||
-      bullets[i].x < -1000 || bullets[i].x > 3000 ||
-      bullets[i].y < -1000 || bullets[i].y > 3000
+      bullets[i].x < 0 || bullets[i].x > 3000 ||
+      bullets[i].y < 0 || bullets[i].y > 3000
     ) {
       bullets.splice(i, 1);
     }
@@ -219,6 +304,7 @@ setInterval(() => {
   io.emit('state', {
     players,
     bullets,
+    npcs,
   });
 }, 1000 / framerate);
 

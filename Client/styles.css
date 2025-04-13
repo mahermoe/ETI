@@ -206,6 +206,58 @@ button:active {
   transition: width 0.3s ease-in-out; 
 }
 
+#health-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  font-size: 12px;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+#xp-bar-container {
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 25px;
+  background-color: #ddd;
+  border: 1px solid #666;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#xp-bar {
+  height: 100%;
+  width: 100%;
+  background-color: #2196f3;
+  border-radius: 4px;
+  position: relative;
+  transition: width 0.3s ease-in-out;
+}
+
+#xp-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  font-size: 12px;
+  font-weight: bold;
+  pointer-events: none;
+}
+
 #errorBox {
   background-color: #f8d7da;
   color: #842029;
