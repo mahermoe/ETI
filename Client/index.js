@@ -52,6 +52,7 @@ function submitName() {
 }
 
 window.submitName = submitName; // Make the function globally accessible
+window.upgradeStat = upgradeStat; 
 
 //---- Game Logic ----\\
 
@@ -213,6 +214,30 @@ function updateXPBar() {
     xpText.textContent = `Level ${players[myId].level}: ${players[myId].xp}/${(xpMax)} XP`;
 }
 
+function setStatSegments(statName, level) {
+    const bar = document.querySelector(`.segment-bar[data-bar="${statName}"]`);
+    if (!bar) return;
+  
+    const segments = bar.querySelectorAll('.segment');
+    segments.forEach((seg, index) => {
+      if (index < level) {
+        seg.classList.add('filled', 'active');
+      } else {
+        seg.classList.remove('filled', 'active');
+      }
+    });
+  
+    const valueLabel = document.querySelector(`.stat-value[data-stat="${statName}"]`);
+    if (valueLabel) {
+      valueLabel.textContent = level;
+    }
+}
+
+function upgradeStat(statName){
+    if (!myId || !players[myId]) return;
+    socket.emit('upgradeStat', statName);
+}
+
 // ------------------------- Send Movement to Server ------------------------- \\
 function updateMovement() {
     let dx = 0, dy = 0;
@@ -255,6 +280,11 @@ socket.on("state", (data) => {
                 hp: data.players[id].hp,
                 xp: data.players[id].xp,
                 level: data.players[id].level,
+                statPoints: data.players[id].statPoints,
+                healthRegen: data.players[id].healthRegen,
+                bulletDamage: data.players[id].bulletDamage,
+                movementSpeed: data.players[id].movementSpeed,
+                maxArmor: data.players[id].maxArmor,
                 name: data.players[id].name,
                 class: data.players[id].class, // shows weapon class
                 cannonX: data.players[id].cannonX, // shows cannon direction
@@ -273,8 +303,23 @@ socket.on("state", (data) => {
         players[id].cannonX = data.players[id].cannonX;
         players[id].cannonY = data.players[id].cannonY;
         players[id].hp = data.players[id].hp;
+
+        // // Player Stats
         players[id].xp = data.players[id].xp;
         players[id].level = data.players[id].level;
+
+        players[id].statPoints = data.players[id].statPoints;
+        players[id].healthRegen = data.players[id].healthRegen;
+        players[id].bulletDamage = data.players[id].bulletDamage;
+        players[id].movementSpeed = data.players[id].movementSpeed;
+        players[id].maxArmor = data.players[id].maxArmor;
+
+        setStatSegments('healthRegen', data.players[id].healthRegen);
+        setStatSegments('maxArmor', data.players[id].maxArmor);
+        setStatSegments('bulletDamage', data.players[id].bulletDamage);
+        setStatSegments('movementSpeed', data.players[id].movementSpeed);
+        
+        // // Screen Canvas
         players[id].canvasWidth = data.players[id].canvasWidth;
         players[id].canvasHeight = data.players[id].canvasHeight;
     }

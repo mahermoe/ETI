@@ -89,10 +89,13 @@ io.on('connection', (socket) => {
     name: "",
     level: 1,
     xp: 0,
+    skillPoints: 0,
     hp: 100,
     armor: 0,
-    maxArmor: 0,
-    healthRegen: 0.3,
+    maxArmor: 1,
+    healthRegen: 1,
+    bulletDamage: 1,
+    movementSpeed: 1,
     class: "pistol",
     spawned: false,
   };
@@ -185,29 +188,37 @@ io.on('connection', (socket) => {
         player.hp = Math.min(player.hp + 30, 100);
       }
       else { // type === "armor"
-        player.armor = Math.min(player.armor + 20, player.maxArmor);
+        player.armor = Math.min(player.armor + 20, (player.maxArmor * 20));
       }
       delete drops[dropId];
     }
+  });
+
+  socket.on('upgradeStat', (statName) => {
+    const player = players[socket.id];
+    if (!player || !player.spawned || player.skillPoints === 0 || !player[statName] || player[statName] >= 10) return;
+    player[statName]++;
+    player.skillPoints--;
   });
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
     delete players[socket.id];
   });
+
 }); //-------------------------- End of Sockets //--------------------------\\
 
-// Player Health Regen every 2 seconds
+// Player Health Regen every 3 seconds (0.3 * stat hp)
 function doHealthRegen(){
   for (const id in players){
     if (players[id].hp < 100){
-      players[id].hp += players[id].healthRegen;
+      players[id].hp += (players[id].healthRegen * 0.3);
     }
     if (players[id].hp > 100){
       players[id].hp = 100;
     }
   }
-  setTimeout(doHealthRegen, 2000);
+  setTimeout(doHealthRegen, 3000);
 }
 doHealthRegen() // Initial Call
 
@@ -249,6 +260,7 @@ function giveXp(player, xp){
   while (player.xp >= player.level * 100){ // Check if xp exceeds xp max (level * 100), carry over xp
     player.xp -= player.level * 100;
     player.level++;
+    player.skillPoints += 1;
   }
 }
 
@@ -278,7 +290,7 @@ setInterval(() => {
 
       // If player within hitbox range do damage
       if (dist <= hitbox){
-        let dmg = classData[bullet.class].bulletDmg;
+        let dmg = classData[bullet.class].bulletDmg * players[bullet.owner].bulletDamage;
 
         // Damage Player Armor
         if(target.armor > 0){
@@ -291,7 +303,7 @@ setInterval(() => {
           target.hp -= dmg;
         }
 
-        console.log(`${players[bullet.owner].name} hit ${target.name} for ${classData[bullet.class].bulletDmg} dmg`);
+        console.log(`${players[bullet.owner].name} hit ${target.name} for ${dmg} dmg`);
         hit = true;
 
         if (target.hp <= 0) { // Handle respawning if dead
@@ -317,8 +329,8 @@ setInterval(() => {
 
       // Damage NPC Health
       if (dist <= 10 + npcHitbox){
-        npcTarget.hp -= classData[bullet.class].bulletDmg;
-        console.log(`${players[bullet.owner].name} hit NPC ${npcId} for ${classData[bullet.class].bulletDmg} dmg`);
+        npcTarget.hp -= classData[bullet.class].bulletDmg * players[bullet.owner].bulletDamage;
+        console.log(`${players[bullet.owner].name} hit NPC ${npcId} for ${classData[bullet.class].bulletDmg * players[bullet.owner].bulletDamage} dmg`);
         hit = true;
 
         // NPC Death -- Give Player XP -- Remove NPC
