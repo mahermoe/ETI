@@ -24,6 +24,96 @@
             <div id="errorBox" class="hidden"></div>
          </div>
 
+         <div id="stat-panel" class="stat-panel">
+
+            <div class="stat-upgrade">
+              <div class="stat-label">Health Regen</div>
+              <div class="segment-bar" data-bar="healthRegen">
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+              </div>
+              <div class="stat-controls">
+                <span class="stat-value" data-stat="healthRegen">1</span>
+                <button class="plus-btn" onclick="upgradeStat('healthRegen')">+</button>
+              </div>
+            </div>
+          
+            <div class="stat-upgrade">
+              <div class="stat-label">Max Armor</div>
+              <div class="segment-bar" data-bar="maxArmor">
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+              </div>
+              <div class="stat-controls">
+                <span class="stat-value" data-stat="maxArmor">1</span>
+                <button class="plus-btn" onclick="upgradeStat('maxArmor')">+</button>
+              </div>
+            </div>
+          
+            <div class="stat-upgrade">
+              <div class="stat-label">Bullet Speed</div>
+              <div class="segment-bar" data-bar="bulletSpeed">
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+              </div>
+              <div class="stat-controls">
+                <span class="stat-value" data-stat="bulletSpeed">1</span>
+                <button class="plus-btn" onclick="upgradeStat('bulletSpeed')">+</button>
+              </div>
+            </div>
+          
+            <div class="stat-upgrade">
+              <div class="stat-label">Bullet Penetration</div>
+              <div class="segment-bar" data-bar="bulletPenetration">
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+              </div>
+              <div class="stat-controls">
+                <span class="stat-value" data-stat="bulletPenetration">1</span>
+                <button class="plus-btn" onclick="upgradeStat('bulletPenetration')">+</button>
+              </div>
+            </div>
+          
+            <div class="stat-upgrade">
+              <div class="stat-label">Bullet Damage</div>
+              <div class="segment-bar" data-bar="bulletDamage">
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+              </div>
+              <div class="stat-controls">
+                <span class="stat-value" data-stat="bulletDamage">1</span>
+                <button class="plus-btn" onclick="upgradeStat('bulletDamage')">+</button>
+              </div>
+            </div>
+          
+            <div class="stat-upgrade">
+              <div class="stat-label">Rate of Fire</div>
+              <div class="segment-bar" data-bar="rateOfFire">
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+              </div>
+              <div class="stat-controls">
+                <span class="stat-value" data-stat="rateOfFire">1</span>
+                <button class="plus-btn" onclick="upgradeStat('rateOfFire')">+</button>
+              </div>
+            </div>
+          
+            <div class="stat-upgrade">
+              <div class="stat-label">Movement Speed</div>
+              <div class="segment-bar" data-bar="movementSpeed">
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+              </div>
+              <div class="stat-controls">
+                <span class="stat-value" data-stat="movementSpeed">1</span>
+                <button class="plus-btn" onclick="upgradeStat('movementSpeed')">+</button>
+              </div>
+            </div>
+          
+          </div>
+          
+ 
+
          <!-- Health Bar (Initially Hidden)-->
          <div id="status-bar-container" class="hidden">
             <div id="health-bar"></div>
@@ -47,6 +137,80 @@
             <canvas id="gameCanvas" width = "1470" height = "980"></canvas>
          </div>
 
-        
+         <!-- testing the segments being filled, can be removed no problem-->
+         <script>
+                        //----------------------------------------------can be removed
+
+            function testSegments(statName, level) {
+              const bar = document.querySelector(`.segment-bar[data-bar="${statName}"]`);
+              if (!bar) return;
+            
+              const segments = bar.querySelectorAll('.segment');
+              segments.forEach((seg, index) => {
+                if (index < level) {
+                  seg.classList.add('filled', 'active');
+                } else {
+                  seg.classList.remove('filled', 'active');
+                }
+              });
+            
+              const valueLabel = document.querySelector(`.stat-value[data-stat="${statName}"]`);
+              if (valueLabel) {
+                valueLabel.textContent = level;
+              }
+            }
+            // Example: simulate setting values
+            testSegments("healthRegen", 4);
+            testSegments("bulletDamage", 6);
+            testSegments("rateOfFire", 2);
+            </script>
+
+         <script>
+            // Show the class selection popup after 10 seconds for testing
+            /*
+            setTimeout(() => {
+            document.getElementById("class-panel").classList.remove("hidden");
+            }, 10000);
+            */
+                        //----------------------------------------------can be removed
+
+         </script>
+ 
+
+         <!-- Class Selection Panel -->
+         <div id="class-panel" class="class-panel hidden">
+            <h2><span class="icon"></span>Class Upgrades</h2>
+            
+            <div class="class-grid">
+
+            <div class="class-tile color" data-class="sniper">
+               <div class="class-icon"></div> <!-- place holder for the class image-->
+               <span class="class-name">Sniper</span>
+            </div>
+
+            <div class="class-tile color" data-class="Rifle">
+               <div class="class-icon"></div>
+               <span class="class-name">Rifle</span>
+            </div>
+
+            <div class="class-tile color" data-class="Machine Gun">
+               <div class="class-icon"></div>
+               <span class="class-name">Machine Gun</span>
+            </div>
+
+            <div class="class-tile color" data-class="Shotgun">
+               <div class="class-icon"></div>
+               <span class="class-name">Shotgun</span>
+            </div>
+
+            </div>
+            <button class="ignore-btn">Ignore</button>
+         </div>
+ 
+ 
+            
+              
     </body>
+
+    
 </html>
