@@ -70,6 +70,21 @@ body {
   animation-timing-function: linear;
 }
 
+.input-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url('enterNameBack.jpg'); /* optional background */
+  background-size: cover;
+  background-position: center;
+  z-index: 999; /* ensure it's on top */
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -83,6 +98,10 @@ html, body {
   height: 100vh;
   image-rendering: pixelated;
 } */
+
+.hidden {
+  display: none !important;
+}
 
 .input-container {
   display: flex;

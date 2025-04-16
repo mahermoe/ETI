@@ -43,6 +43,7 @@ function submitName() {
 
         setTimeout(() => {
             document.getElementById("enterNameScreen").classList.add("hidden"); // Hide Name Screen
+            document.getElementById("input-wrapper").classList.add("hidden"); // Hide backround
             document.getElementById("gameScreen").classList.remove("hidden");  // Show Game Screen
             document.getElementById("status-bar-container").classList.remove("hidden");  // Show Health bar
             document.getElementById("stat-panel").classList.remove("hidden");  // Show Upgrade Tab
