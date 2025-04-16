@@ -45,6 +45,7 @@ function submitName() {
             document.getElementById("enterNameScreen").classList.add("hidden"); // Hide Name Screen
             document.getElementById("gameScreen").classList.remove("hidden");  // Show Game Screen
             document.getElementById("status-bar-container").classList.remove("hidden");  // Show Healthbar
+            document.getElementById("stat-panel").classList.remove("hidden");  // Show Upgrade Tab
             document.getElementById("xp-bar-container").classList.remove("hidden");  // Show Xp bar
         }, 1000);
     });
