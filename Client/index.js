@@ -425,6 +425,12 @@ asteroidPurple.src = "Resources/asteroid_purple.png";
 const asteroidPink = new Image();
 asteroidPink.src = "Resources/asteroid_pink.png";
 
+const medkitImage = new Image();
+medkitImage.src = "Resources/medKit.png";
+
+const armorImage = new Image();
+armorImage.src = "Resources/shield.png";
+
 function drawGame() {
     context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
     context.save(); // Save canvas state
@@ -589,8 +595,15 @@ function drawGame() {
     // Draw Drops
     for (const id in drops){
         const drop = drops[id];
-        context.fillStyle = drop.type === "medkit" ? "red" : "blue";
-        context.fillRect(drop.x - 5, drop.y - 5, 10, 10);
+
+        if (drop.type === "medkit") {
+            context.drawImage(medkitImage, drop.x - 10, drop.y - 10, 20, 20);
+        }else if(drop.type === "armor"){
+            context.drawImage(armorImage, drop.x - 10, drop.y - 10, 20, 20);
+        }
+
+        // context.fillStyle = drop.type === "medkit" ? "red" : "blue";
+        // context.fillRect(drop.x - 5, drop.y - 5, 10, 10);
     }
   
 
