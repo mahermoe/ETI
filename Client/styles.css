@@ -205,7 +205,7 @@ button:active {
 }
 
 #gameScreen{
-  /*background-color: #000000/*#001f4d*/;
+  /*background-color: #000000/*#001f4d;*/
   background-image: url("Resources/background4.png");
   background-size: cover;
 }
