@@ -216,7 +216,8 @@ function updateHealthArmorBar() {
 
     let armor = players[myId].armor;
     let maxArmor = players[myId].maxArmor;
-    armorBar.style.width = `${(armor/(maxArmor * 20))*100}%`;
+    let armorWidth = maxArmor > 0 ? (armor / (maxArmor * 20)) * 100 : 0;
+    armorBar.style.width = `${armorWidth}%`;
   
     if (health > 66) {
       healthBar.style.backgroundColor = "#4caf50"; // green

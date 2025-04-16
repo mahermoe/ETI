@@ -104,7 +104,7 @@ io.on('connection', (socket) => {
     armor: 0,
     maxArmor: 0, // Player Stat
     healthRegen: 0, // Player Stat
-    bulletDamage: 10, // Player Stat
+    bulletDamage: 0, // Player Stat
     movementSpeed: 0, // Player Stat
     class: "pistol",
     spawned: false,
