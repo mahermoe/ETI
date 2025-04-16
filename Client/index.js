@@ -282,6 +282,8 @@ function updateMovement() {
     
     setTimeout(updateMovement, 1000 / 60); // 60 FPS movement update
 }
+
+
   
 updateMovement();
 
@@ -403,7 +405,32 @@ socket.on("state", (data) => {
 // ------------------------- Render Game ------------------------- \\
 
 const backgroundImage = new Image()
-backgroundImage.src = 'https://img.freepik.com/premium-photo/grid-lines-background-with-white-background-white-grid-background_207225-3315.jpg';
+//backgroundImage.src = 'https://img.freepik.com/premium-photo/grid-lines-background-with-white-background-white-grid-background_207225-3315.jpg';
+backgroundImage.src = "Resources/background3.png"
+
+const playerImage = new Image();
+playerImage.src = 'Resources/blueShip.png';
+
+const enemyImage = new Image();
+enemyImage.src = 'Resources/redShip.png';
+
+const laserImage = new Image();
+laserImage.src = 'Resources/laser.png';
+
+const asteroidYellow = new Image();
+asteroidYellow.src = "Resources/asteroid_yellow.png";
+
+const asteroidPurple = new Image();
+asteroidPurple.src = "Resources/asteroid_purple.png";
+
+const asteroidPink = new Image();
+asteroidPink.src = "Resources/asteroid_pink.png";
+
+const medkitImage = new Image();
+medkitImage.src = "Resources/medKit.png";
+
+const armorImage = new Image();
+armorImage.src = "Resources/shield.png";
 
 function drawGame() {
     context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
@@ -426,10 +453,18 @@ function drawGame() {
         const player = players[id];
         context.fillStyle = id === myId ? "blue" : "red"; // Color current player differently
         
+
+        //if (playerImage.complete) {
+            const spriteWidth = 40;
+            const spriteHeight = 40;
+            //context.drawImage(playerImage, player.x - spriteWidth / 2, player.y - spriteHeight / 2, spriteWidth, spriteHeight);
+        //}
+
+
         // Draw player as a circle
-        context.beginPath();
-        context.arc(player.x, player.y, 10, 0, Math.PI * 2); // Draw player as a circle
-        context.fill();
+        // context.beginPath();
+        // context.arc(player.x, player.y, 10, 0, Math.PI * 2); // Draw player as a circle
+        // context.fill();
 
         // Draw player name/class above the circle
         context.fillStyle = "black";
@@ -451,7 +486,7 @@ function drawGame() {
         context.fillStyle = hpPercent > 0.66 ? "green" : hpPercent > 0.33 ? "orange" : "red";
         context.fillRect(barX, barY, barWidth * hpPercent, barHeight);
 
-        // Draw rotating cannon for all players
+        //Draw rotating cannon for all players
         let remoteMouseWorldX, remoteMouseWorldY, dx, dy;
         if (id == myId){ // Get mouse data from client for client for more smoothness
             mouseWorldX = mouseScreenX - canvas.width / (2 * zoom) + player.x;
@@ -470,34 +505,78 @@ function drawGame() {
 
         const angle = Math.atan2(dy, dx);
 
-        const cannonLength = 20;
-        const cannonWidth = 6;
+        if (id == myId) {
+            
+            context.save();
+            context.translate(player.x, player.y);
+            context.rotate(angle + Math.PI / 2); // same angle used for cannon
+            context.drawImage(playerImage, -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
+            context.restore();
+        }else if (id!=myId){
+            context.save();
+            context.translate(player.x, player.y);
+            context.rotate(angle + Math.PI / 2); // same angle used for cannon
+            context.drawImage(enemyImage, -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
+            context.restore();
+        }
 
-        context.save();
-        context.translate(player.x, player.y); // Move origin to player
-        context.rotate(angle); // Rotate towards mouse
-        context.fillStyle = "gray";
-        context.fillRect(0, -cannonWidth / 2, cannonLength, cannonWidth); // Draw cannon
-        context.restore();
+        // const cannonLength = 20;
+        // const cannonWidth = 6;
+
+        // context.save();
+        // context.translate(player.x, player.y); // Move origin to player
+        // context.rotate(angle); // Rotate towards mouse
+        // context.fillStyle = "gray";
+        // context.fillRect(0, -cannonWidth / 2, cannonLength, cannonWidth); // Draw cannon
+        // context.restore();
     }
 
     // Draw all bullets
     bullets.forEach((b) => {
-        context.fillStyle = "black";
-        context.beginPath();
-        context.arc(b.x, b.y, 4, 0, Math.PI * 2); // small circle, do players[i].location for better aligning
-        context.fill();
+        const laserWidth = 20;
+        const laserHeight = 8;
+    
+        const angle = Math.atan2(b.dy, b.dx);
+    
+        context.save();
+        context.translate(b.x, b.y);
+        context.rotate(angle);
+        context.drawImage(laserImage, -laserWidth / 2, -laserHeight / 2, laserWidth, laserHeight);
+        context.restore();
     });
 
-    // Draw all npcs
-    for (const id in npcs){
-        const npc = npcs[id];
-        const size = npc.color === "yellow" ? 10 : npc.color === "purple" ? 20 : npc.color === "pink" ? 30 : 10;
-        const maxhp = npc.color === "yellow" ? 100 : npc.color === "purple" ? 250 : npc.color === "pink" ? 600 : 100;
+    //Draw all npcs
+    // for (const id in npcs){
+    //     const npc = npcs[id];
+    //     const size = npc.color === "yellow" ? 10 : npc.color === "purple" ? 20 : npc.color === "pink" ? 30 : 10;
+    //     const maxhp = npc.color === "yellow" ? 100 : npc.color === "purple" ? 250 : npc.color === "pink" ? 600 : 100;
 
-        // Draw npc as square
-        context.fillStyle = npc.color;
-        context.fillRect(npc.x - size, npc.y - size, size * 2, size * 2);
+    //     // Draw npc as square
+    //     context.fillStyle = npc.color;
+    //     context.fillRect(npc.x - size, npc.y - size, size * 2, size * 2);
+
+    for (const id in npcs) {
+        const npc = npcs[id];
+        
+        // Determine size and max HP
+        const size = npc.color === "yellow" ? 20 : npc.color === "purple" ? 40 : npc.color === "pink" ? 60 : 10;
+        const maxhp = npc.color === "yellow" ? 100 : npc.color === "purple" ? 250 : npc.color === "pink" ? 600 : 100;
+    
+        
+        npc.rotation = 0;
+        
+
+        // Choose image
+        let asteroidImage;
+        if (npc.color === "yellow") asteroidImage = asteroidYellow;
+        else if (npc.color === "purple") asteroidImage = asteroidPurple;
+        else if (npc.color === "pink") asteroidImage = asteroidPink;
+    
+        // Draw asteroid image centered at NPC position
+        if (asteroidImage && asteroidImage.complete) {
+            const spriteSize = size * 2;
+            context.drawImage(asteroidImage, npc.x - size, npc.y - size, spriteSize, spriteSize);
+        }
 
         // Draw npc hp bar
         const barWidth = 60;
@@ -517,8 +596,15 @@ function drawGame() {
     // Draw Drops
     for (const id in drops){
         const drop = drops[id];
-        context.fillStyle = drop.type === "medkit" ? "red" : "blue";
-        context.fillRect(drop.x - 5, drop.y - 5, 10, 10);
+
+        if (drop.type === "medkit") {
+            context.drawImage(medkitImage, drop.x - 10, drop.y - 10, 20, 20);
+        }else if(drop.type === "armor"){
+            context.drawImage(armorImage, drop.x - 10, drop.y - 10, 20, 20);
+        }
+
+        // context.fillStyle = drop.type === "medkit" ? "red" : "blue";
+        // context.fillRect(drop.x - 5, drop.y - 5, 10, 10);
     }
   
 
