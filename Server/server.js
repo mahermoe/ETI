@@ -125,10 +125,22 @@ io.on('connection', (socket) => {
     }
   });
 
+  // socket.on('move', (data) => {
+  //   if (players[socket.id]) {
+  //     players[socket.id].x += data.dx * (movementSpeedMultiplier) * (1 + (players[socket.id].movementSpeed / 100));
+  //     players[socket.id].y += data.dy * (movementSpeedMultiplier) * (1 + (players[socket.id].movementSpeed / 100));
+  //   }
+  // });
+
   socket.on('move', (data) => {
     if (players[socket.id]) {
-      players[socket.id].x += data.dx * (movementSpeedMultiplier) * (1 + (players[socket.id].movementSpeed / 100));
-      players[socket.id].y += data.dy * (movementSpeedMultiplier) * (1 + (players[socket.id].movementSpeed / 100));
+      let player = players[socket.id];
+  
+      player.x += data.dx * movementSpeedMultiplier * (1 + (player.movementSpeed / 100));
+      player.y += data.dy * movementSpeedMultiplier * (1 + (player.movementSpeed / 100));
+  
+      player.x = Math.max(0, Math.min(3000, player.x));
+      player.y = Math.max(0, Math.min(3000, player.y));
     }
   });
 
