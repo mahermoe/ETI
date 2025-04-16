@@ -204,6 +204,10 @@ button:active {
   box-shadow: 0 0 5px rgba(0,128,0,0.3);
 }
 
+#gameScreen{
+  background-color: #001f4d;
+}
+
 #status-bar-container {
   position: fixed;
   bottom: 10px;
