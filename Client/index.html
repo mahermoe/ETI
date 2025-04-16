@@ -25,6 +25,11 @@
       <!-- Stat Panel -->
       <div id="stat-panel" class="stat-panel hidden">
 
+        <!-- Skill Points Panel -->
+        <div class="stat-upgrade">
+          <div class="skill-points">Available Skill Points: 1</div>
+        </div>
+        
         <!-- Health Regen Stat -->
         <div class="stat-upgrade">
           <div class="stat-label">Health Regen</div>
@@ -134,7 +139,7 @@
       <!-- Armor Bar (Initially Hidden)-->
       <div id="armor-bar-container" class="hidden">
         <div id="armor-bar"></div>
-        <span id="armor-text"></span>
+        <span id="armor-text"> 0/0 Armor</span>
       </div>     
 
       <!--Game Screen (Initially Hidden)-->
@@ -142,76 +147,35 @@
         <canvas id="gameCanvas" width = "1470" height = "980"></canvas>
       </div>
 
-      <!-- testing the segments being filled, can be removed no problem-->
-      <!-- <script>
-        //----------------------------------------------can be removed
-
-
-        function testSegments(statName, level) {
-          const bar = document.querySelector(`.segment-bar[data-bar="${statName}"]`);
-          if (!bar) return;
+      <!-- Class Selection Panel (Initially Hidden)-->
+      <div id="class-panel" class="class-panel hidden">
+        <h2><span class="icon"></span>Class Upgrades</h2>
         
-          const segments = bar.querySelectorAll('.segment');
-          segments.forEach((seg, index) => {
-            if (index < level) {
-              seg.classList.add('filled', 'active');
-            } else {
-              seg.classList.remove('filled', 'active');
-            }
-          });
-        
-          const valueLabel = document.querySelector(`.stat-value[data-stat="${statName}"]`);
-          if (valueLabel) {
-            valueLabel.textContent = level;
-          }
-        }
-        // Example: simulate setting values
-        testSegments("healthRegen", 1);
-        testSegments("bulletDamage", 1);
-        testSegments("rateOfFire", 1);
-      </script> -->
+        <div class="class-grid">
 
-      <script>
-        // Show the class selection popup after 10 seconds for testing
-        /*
-        setTimeout(() => {
-        document.getElementById("class-panel").classList.remove("hidden");
-        }, 10000);
-        */
-                    //----------------------------------------------can be removed
+        <div class="class-tile color" data-class="sniper">
+            <div class="class-icon"></div> <!-- place holder for the class image-->
+            <span class="class-name">Sniper</span>
+        </div>
 
-      </script>
- 
+        <div class="class-tile color" data-class="rifle">
+            <div class="class-icon"></div>
+            <span class="class-name">Rifle</span>
+        </div>
 
-         <!-- Class Selection Panel -->
-         <div id="class-panel" class="class-panel hidden">
-            <h2><span class="icon"></span>Class Upgrades</h2>
-            
-            <div class="class-grid">
+        <div class="class-tile color" data-class="smg">
+            <div class="class-icon"></div>
+            <span class="class-name">Submachine Gun</span>
+        </div>
 
-            <div class="class-tile color" data-class="sniper">
-               <div class="class-icon"></div> <!-- place holder for the class image-->
-               <span class="class-name">Sniper</span>
-            </div>
+        <div class="class-tile color" data-class="shotgun">
+            <div class="class-icon"></div>
+            <span class="class-name">Shotgun</span>
+        </div>
 
-            <div class="class-tile color" data-class="Rifle">
-               <div class="class-icon"></div>
-               <span class="class-name">Rifle</span>
-            </div>
-
-            <div class="class-tile color" data-class="Machine Gun">
-               <div class="class-icon"></div>
-               <span class="class-name">Machine Gun</span>
-            </div>
-
-            <div class="class-tile color" data-class="Shotgun">
-               <div class="class-icon"></div>
-               <span class="class-name">Shotgun</span>
-            </div>
-
-            </div>
-            <button class="ignore-btn">Ignore</button>
-         </div>
+        </div>
+        <button class="ignore-btn">Ignore</button>
+      </div>
  
  
             

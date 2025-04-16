@@ -18,6 +18,16 @@ let colors = ["yellow", "purple", "pink"];
 let drops = {};
 let dropTypes = ["medkit", "armor"];
 
+// Game Configuration
+const movementSpeedMultiplier = 1.2;
+const maxArmorPerLevel = 20;
+const armorPerDrop = 20;
+const hpPerDrop = 30;
+const healthRegenAmount = 0.3;
+const healthRegenInterval = 3000; // 3 Seconds
+const spawnNpcInterval = 2500 // 2.5 Seconds
+const spawnDropInterval = 5000 // 5 Seconds
+
 const classData = {
   pistol: {
     bulletSpeed: 10,
@@ -89,13 +99,13 @@ io.on('connection', (socket) => {
     name: "",
     level: 1,
     xp: 0,
-    skillPoints: 0,
+    skillPoints: 1,
     hp: 100,
     armor: 0,
-    maxArmor: 1,
-    healthRegen: 1,
-    bulletDamage: 1,
-    movementSpeed: 1,
+    maxArmor: 0, // Player Stat
+    healthRegen: 0, // Player Stat
+    bulletDamage: 10, // Player Stat
+    movementSpeed: 0, // Player Stat
     class: "pistol",
     spawned: false,
   };
@@ -106,6 +116,7 @@ io.on('connection', (socket) => {
       players[socket.id].hp = 100;
       players[socket.id].x = 1500;
       players[socket.id].y = 1500;
+      //----------Reset StatPoints, Level, Xp, Class, Etc. Not yet.----------\\
       console.log(`Player registered: ${playerName} (ID: ${socket.id})`);
       socket.emit('registerSuccess', playerName, socket.id);
       
@@ -116,8 +127,8 @@ io.on('connection', (socket) => {
 
   socket.on('move', (data) => {
     if (players[socket.id]) {
-      players[socket.id].x += data.dx * classData[players[socket.id].class].movementSpeed;
-      players[socket.id].y += data.dy * classData[players[socket.id].class].movementSpeed;
+      players[socket.id].x += data.dx * (movementSpeedMultiplier) * (1 + (players[socket.id].movementSpeed / 100));
+      players[socket.id].y += data.dy * (movementSpeedMultiplier) * (1 + (players[socket.id].movementSpeed / 100));
     }
   });
 
@@ -185,10 +196,10 @@ io.on('connection', (socket) => {
 
     if (dist < 30){
       if (drop.type === "medkit"){
-        player.hp = Math.min(player.hp + 30, 100);
+        player.hp = Math.min(player.hp + hpPerDrop, 100);
       }
       else { // type === "armor"
-        player.armor = Math.min(player.armor + 20, (player.maxArmor * 20));
+        player.armor = Math.min(player.armor + armorPerDrop, (player.maxArmor * maxArmorPerLevel));
       }
       delete drops[dropId];
     }
@@ -196,9 +207,16 @@ io.on('connection', (socket) => {
 
   socket.on('upgradeStat', (statName) => {
     const player = players[socket.id];
-    if (!player || !player.spawned || player.skillPoints === 0 || !player[statName] || player[statName] >= 10) return;
+    if (!player || !player.spawned || player.skillPoints === 0 || player[statName] === null || player[statName] >= 10) return;
     player[statName]++;
     player.skillPoints--;
+    console.log(`${statName} upgraded to ${player[statName]},  ${player.skillPoints} skill points remaining. `);
+  });
+
+  socket.on('selectClass', (selectedClass) => {
+    const player = players[socket.id];
+    if (!player || !player.spawned || player.level < 10 || !classData[selectedClass] || player.class != "pistol") return;
+    player.class = selectedClass;
   });
 
   socket.on('disconnect', () => {
@@ -212,13 +230,13 @@ io.on('connection', (socket) => {
 function doHealthRegen(){
   for (const id in players){
     if (players[id].hp < 100){
-      players[id].hp += (players[id].healthRegen * 0.3);
+      players[id].hp += (players[id].healthRegen * healthRegenAmount);
     }
     if (players[id].hp > 100){
       players[id].hp = 100;
     }
   }
-  setTimeout(doHealthRegen, 3000);
+  setTimeout(doHealthRegen, healthRegenInterval);
 }
 doHealthRegen() // Initial Call
 
@@ -236,7 +254,7 @@ function spawnRandomNPC(){
     }
     console.log(`Spawned NPC ${id} at (${npcs[id].x}, ${npcs[id].y})`);
   }
-  setTimeout(spawnRandomNPC, 2500); // Spawn npcs every 2.5 second
+  setTimeout(spawnRandomNPC, spawnNpcInterval); // Spawn npcs every 2.5 second
 }
 spawnRandomNPC(); // Initial Npc spawn
 
@@ -251,12 +269,18 @@ function spawnDrop(){
     }
     console.log(`Spawned Drop ${id} at (${drops[id].x}, ${drops[id].y})`);
   }
-  setTimeout(spawnDrop, 5000); // Spawn drop every 5 seconds
+  setTimeout(spawnDrop, spawnDropInterval); // Spawn drop every 5 seconds
 }
 spawnDrop(); // Initial Drop spawn
 
 function giveXp(player, xp){
   player.xp += xp;
+  if (player.level >= 30){
+    if (player.xp > 3000){
+      player.xp = 3000;
+    }
+    return;
+  }
   while (player.xp >= player.level * 100){ // Check if xp exceeds xp max (level * 100), carry over xp
     player.xp -= player.level * 100;
     player.level++;
@@ -290,7 +314,7 @@ setInterval(() => {
 
       // If player within hitbox range do damage
       if (dist <= hitbox){
-        let dmg = classData[bullet.class].bulletDmg * players[bullet.owner].bulletDamage;
+        let dmg = classData[bullet.class].bulletDmg * (1 + (players[bullet.owner].bulletDamage / 10)); // 1.1, 1.2, 1.3 (lvl 3)
 
         // Damage Player Armor
         if(target.armor > 0){
@@ -329,8 +353,9 @@ setInterval(() => {
 
       // Damage NPC Health
       if (dist <= 10 + npcHitbox){
-        npcTarget.hp -= classData[bullet.class].bulletDmg * players[bullet.owner].bulletDamage;
-        console.log(`${players[bullet.owner].name} hit NPC ${npcId} for ${classData[bullet.class].bulletDmg * players[bullet.owner].bulletDamage} dmg`);
+        let dmg = classData[bullet.class].bulletDmg * (1 + (players[bullet.owner].bulletDamage / 10)); // 1.1, 1.2, 1.3 (lvl 3)
+        npcTarget.hp -= dmg;
+        console.log(`${players[bullet.owner].name} hit NPC ${npcId} for ${dmg} dmg`);
         hit = true;
 
         // NPC Death -- Give Player XP -- Remove NPC

@@ -44,9 +44,10 @@ function submitName() {
         setTimeout(() => {
             document.getElementById("enterNameScreen").classList.add("hidden"); // Hide Name Screen
             document.getElementById("gameScreen").classList.remove("hidden");  // Show Game Screen
-            document.getElementById("status-bar-container").classList.remove("hidden");  // Show Healthbar
+            document.getElementById("status-bar-container").classList.remove("hidden");  // Show Health bar
             document.getElementById("stat-panel").classList.remove("hidden");  // Show Upgrade Tab
             document.getElementById("xp-bar-container").classList.remove("hidden");  // Show Xp bar
+            document.getElementById("armor-bar-container").classList.remove("hidden");  // Show Armor bar
         }, 1000);
     });
 }
@@ -90,6 +91,7 @@ let mouseScreenX = 0; // Raw position of mouse on screen
 let mouseScreenY = 0;
 const lerpFactor = 0.1; // Controls smooth movement
 let zoom = 2;
+let selectClassIgnore = 0;
 let keys = {
     w: false,
     a: false,
@@ -158,6 +160,23 @@ function handleAutoFire() {
     }
 }
 
+// Select Class
+document.querySelectorAll('.class-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+        let selectedClass = tile.getAttribute('data-class');
+        socket.emit('selectClass', selectedClass);
+        // You can add additional logic here, like updating the UI or triggering other game mechanics
+    });
+});
+
+// Select Class Ignore Button
+document.querySelector('.ignore-btn').addEventListener('click', () => {
+    document.getElementById('class-panel').classList.add('hidden'); 
+    if (!myId || !players[myId] || players[myId].level < 10) return;
+    selectClassIgnore += 1;
+});
+
+
 // ------------------- Capture key events ------------------- \\
 document.addEventListener("keydown", (event) => {
     if (keys[event.key] !== undefined) {
@@ -186,12 +205,18 @@ document.addEventListener("keyup", (event) => {
 });
 
 // ------------------------- Update UI ------------------------- \\
-function updateHealthBar() {
+function updateHealthArmorBar() {
     const healthBar = document.getElementById("health-bar");
     const healthText = document.getElementById("health-text")
+    const armorBar = document.getElementById("armor-bar");
+    const armorText = document.getElementById("armor-text");
   
     let health = players[myId].hp; // Get's Players Health
     healthBar.style.width = `${health}%`;
+
+    let armor = players[myId].armor;
+    let maxArmor = players[myId].maxArmor;
+    armorBar.style.width = `${(armor/(maxArmor * 20))*100}%`;
   
     if (health > 66) {
       healthBar.style.backgroundColor = "#4caf50"; // green
@@ -201,7 +226,8 @@ function updateHealthBar() {
       healthBar.style.backgroundColor = "#f44336"; // red
     }
 
-    healthText.textContent = `${Math.round((players[myId].hp * 10)) / 10}/100 HP`
+    healthText.textContent = `${Math.round((players[myId].hp * 10)) / 10}/100 HP`;
+    armorText.textContent = `${Math.round((armor * 10)) / 10}/${maxArmor * 20} Armor`;
 }
 
 function updateXPBar() {
@@ -267,8 +293,11 @@ socket.on("state", (data) => {
     if(!data.players[socket.id].spawned && document.getElementById("enterNameScreen").classList.contains("hidden")){ 
         document.getElementById("enterNameScreen").classList.remove("hidden"); // Show Name Screen
         document.getElementById("gameScreen").classList.add("hidden");  // Hide Game Screen
-        document.getElementById("status-bar-container").classList.add("hidden");  // Hide Healthbar
+        document.getElementById("status-bar-container").classList.add("hidden");  // Hide Health bar
+        document.getElementById("stat-panel").classList.add("hidden");  // Hide Upgrade Tab
         document.getElementById("xp-bar-container").classList.add("hidden");  // Hide Xp bar
+        document.getElementById("armor-bar-container").classList.add("hidden");  // Hide Armor bar
+        document.getElementById("class-panel").classList.add("hidden"); // Hide Select Class Panel
     }
 
     for (const id in data.players) {
@@ -278,9 +307,10 @@ socket.on("state", (data) => {
                 x: data.players[id].x, 
                 y: data.players[id].y, 
                 hp: data.players[id].hp,
+                armor: data.players[id].armor,
                 xp: data.players[id].xp,
                 level: data.players[id].level,
-                statPoints: data.players[id].statPoints,
+                skillPoints: data.players[id].skillPoints,
                 healthRegen: data.players[id].healthRegen,
                 bulletDamage: data.players[id].bulletDamage,
                 movementSpeed: data.players[id].movementSpeed,
@@ -300,24 +330,21 @@ socket.on("state", (data) => {
 
         // Update player data
         players[id].name = data.players[id].name;
+        players[id].class = data.players[id].class;
         players[id].cannonX = data.players[id].cannonX;
         players[id].cannonY = data.players[id].cannonY;
         players[id].hp = data.players[id].hp;
+        players[id].armor = data.players[id].armor;
 
         // // Player Stats
         players[id].xp = data.players[id].xp;
         players[id].level = data.players[id].level;
 
-        players[id].statPoints = data.players[id].statPoints;
+        players[id].skillPoints = data.players[id].skillPoints;
         players[id].healthRegen = data.players[id].healthRegen;
         players[id].bulletDamage = data.players[id].bulletDamage;
         players[id].movementSpeed = data.players[id].movementSpeed;
         players[id].maxArmor = data.players[id].maxArmor;
-
-        setStatSegments('healthRegen', data.players[id].healthRegen);
-        setStatSegments('maxArmor', data.players[id].maxArmor);
-        setStatSegments('bulletDamage', data.players[id].bulletDamage);
-        setStatSegments('movementSpeed', data.players[id].movementSpeed);
         
         // // Screen Canvas
         players[id].canvasWidth = data.players[id].canvasWidth;
@@ -332,8 +359,42 @@ socket.on("state", (data) => {
     }
 
     if (myId && players[myId]) {
-        updateHealthBar();
+        updateHealthArmorBar();
         updateXPBar();
+
+        // Skill Points Text
+        const skillPointsElement = document.querySelector('.skill-points');
+        skillPointsElement.textContent = `Available Skill Points: ${players[myId].skillPoints}`;
+        if (players[myId].skillPoints > 0){
+            skillPointsElement.style.color = 'green';
+        } else {
+            skillPointsElement.style.color = 'grey'; 
+        }
+
+        setStatSegments('healthRegen', players[myId].healthRegen);
+        setStatSegments('maxArmor', players[myId].maxArmor);
+        setStatSegments('bulletDamage', players[myId].bulletDamage);
+        setStatSegments('movementSpeed', players[myId].movementSpeed);
+
+        // Class Selector Pop Up
+        if (players[myId].level === 10 && players[myId].class === "pistol" && selectClassIgnore == 0){
+            document.getElementById("class-panel").classList.remove("hidden");
+        }
+        else if (players[myId].level === 15 && players[myId].class === "pistol" && selectClassIgnore == 1){
+            document.getElementById("class-panel").classList.remove("hidden");
+        }
+        else if (players[myId].level === 20 && players[myId].class === "pistol" && selectClassIgnore == 2){
+            document.getElementById("class-panel").classList.remove("hidden");
+        }
+        else if (players[myId].level === 25 && players[myId].class === "pistol" && selectClassIgnore == 3){
+            document.getElementById("class-panel").classList.remove("hidden");
+        }
+        else if (players[myId].level === 30 && players[myId].class === "pistol" && selectClassIgnore == 4){
+            document.getElementById("class-panel").classList.remove("hidden");
+        }
+        if (players[myId].class != "pistol"){
+            document.getElementById("class-panel").classList.add("hidden");
+        }
     }
 });
 
