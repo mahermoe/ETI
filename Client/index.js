@@ -427,7 +427,7 @@ socket.on("state", (data) => {
 
 const backgroundImage = new Image()
 //backgroundImage.src = 'https://img.freepik.com/premium-photo/grid-lines-background-with-white-background-white-grid-background_207225-3315.jpg';
-backgroundImage.src = "Resources/background3.png"
+backgroundImage.src = "Resources/background5.png"
 
 const playerImage = new Image();
 playerImage.src = 'Resources/blueShip.png';

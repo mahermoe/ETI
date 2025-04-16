@@ -23,7 +23,7 @@ let drops = {};
 let dropTypes = ["medkit", "armor"];
 
 // Game Configuration
-const movementSpeedMultiplier = 1.2;
+const movementSpeedMultiplier = 2; //1.2
 const maxArmorPerLevel = 20;
 const armorPerDrop = 20;
 const hpPerDrop = 30;
