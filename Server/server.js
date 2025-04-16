@@ -8,7 +8,11 @@ const server = http.createServer(app);
 const io = socketIo(server);
 const lastShotTime = {};
 
-app.use(express.static(path.join(__dirname, '../Client')));
+app.use(express.static(path.join(__dirname, '../Client'), {index: false}));
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../Client/Home.html')); // Landing Page
+});
+
 app.use(express.json());
 
 let players = {};
@@ -19,12 +23,14 @@ let drops = {};
 let dropTypes = ["medkit", "armor"];
 
 // Game Configuration
-const movementSpeedMultiplier = 1.2;
+const movementSpeedMultiplier = 2; //1.2
 const maxArmorPerLevel = 20;
 const armorPerDrop = 20;
 const hpPerDrop = 30;
 const healthRegenAmount = 0.3;
 const healthRegenInterval = 3000; // 3 Seconds
+const maxNpcs = 100;
+const maxDrops = 15;
 const spawnNpcInterval = 2500 // 2.5 Seconds
 const spawnDropInterval = 5000 // 5 Seconds
 
@@ -129,13 +135,6 @@ io.on('connection', (socket) => {
       players[socket.id].spawned = true;
     }
   });
-
-  // socket.on('move', (data) => {
-  //   if (players[socket.id]) {
-  //     players[socket.id].x += data.dx * (movementSpeedMultiplier) * (1 + (players[socket.id].movementSpeed / 100));
-  //     players[socket.id].y += data.dy * (movementSpeedMultiplier) * (1 + (players[socket.id].movementSpeed / 100));
-  //   }
-  // });
 
   socket.on('move', (data) => {
     if (players[socket.id]) {
@@ -262,7 +261,7 @@ doHealthRegen() // Initial Call
 
 // Spawn Random NPCs
 function spawnRandomNPC(){
-  if (Object.keys(npcs).length < 100){ // Don't spawn npc if amount >= 100
+  if (Object.keys(npcs).length < maxNpcs){ // Don't spawn npc if amount >= 100
     const id = "npc_" + Date.now(); // Unique id based on time
     const color = colors[Math.floor(Math.random() * colors.length)]; // Random color from colors array
     const hp = color === "yellow" ? 100 : color === "purple" ? 250 : color === "pink" ? 600 : 100;
@@ -279,7 +278,7 @@ function spawnRandomNPC(){
 spawnRandomNPC(); // Initial Npc spawn
 
 function spawnDrop(){
-  if(Object.keys(drops).length < 15){
+  if(Object.keys(drops).length < maxDrops){
     const type = dropTypes[Math.floor(Math.random() * dropTypes.length)] 
     const id = "drop_" + type + "_" + Date.now();
     drops[id] = {
@@ -343,7 +342,7 @@ setInterval(() => {
       const hitbox = classData[bullet.class].hitbox;
 
       // If player within hitbox range do damage
-      if (dist <= hitbox){
+      if (dist <= hitbox && players[bullet.owner]){ // Check distance and bullet owner in-game
         let dmg = classData[bullet.class].bulletDmg * (1 + (players[bullet.owner].bulletDamage / 10)); // 1.1, 1.2, 1.3 (lvl 3)
 
         // Damage Player Armor
@@ -382,7 +381,7 @@ setInterval(() => {
       const hitbox = classData[bullet.class].hitbox;
 
       // Damage NPC Health
-      if (dist <= 10 + npcHitbox){
+      if (dist <= 10 + npcHitbox && players[bullet.owner]){ // Check distance and bullet owner in-game
         let dmg = classData[bullet.class].bulletDmg * (1 + (players[bullet.owner].bulletDamage / 10)); // 1.1, 1.2, 1.3 (lvl 3)
         npcTarget.hp -= dmg;
         console.log(`${players[bullet.owner].name} hit NPC ${npcId} for ${dmg} dmg`);
@@ -390,7 +389,7 @@ setInterval(() => {
 
         // NPC Death -- Give Player XP -- Remove NPC
         if (npcTarget.hp <= 0){
-          let xpForKill = npcTarget.color === "yellow" ? 3000 : npcTarget.color === "purple" ? 5000 : npcTarget.color === "pink" ? 8000 : 0;
+          let xpForKill = npcTarget.color === "yellow" ? 75 : npcTarget.color === "purple" ? 200 : npcTarget.color === "pink" ? 500 : 0;
           giveXp(players[bullet.owner], xpForKill);
           console.log(`${players[bullet.owner].name} killed NPC ${npcId} and earned ${xpForKill} XP!`);
           delete npcs[npcId];
@@ -403,7 +402,8 @@ setInterval(() => {
     if (
       hit ||
       bullets[i].x < 0 || bullets[i].x > 3000 ||
-      bullets[i].y < 0 || bullets[i].y > 3000
+      bullets[i].y < 0 || bullets[i].y > 3000 ||
+      !players[bullet.owner] // Remove bullet if bullet owner leaves game
     ) {
       bullets.splice(i, 1);
     }

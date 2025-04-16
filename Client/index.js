@@ -174,7 +174,6 @@ document.querySelectorAll('.class-tile').forEach(tile => {
     tile.addEventListener('click', () => {
         let selectedClass = tile.getAttribute('data-class');
         socket.emit('selectClass', selectedClass);
-        // You can add additional logic here, like updating the UI or triggering other game mechanics
     });
 });
 
@@ -304,6 +303,7 @@ socket.on("state", (data) => {
     // If player client isn't spawned and name screen is hidden, show name screen
     if(!data.players[socket.id].spawned && document.getElementById("enterNameScreen").classList.contains("hidden")){ 
         document.getElementById("enterNameScreen").classList.remove("hidden"); // Show Name Screen
+        document.getElementById("input-wrapper").classList.remove("hidden"); // Show Input Wrapper
         document.getElementById("gameScreen").classList.add("hidden");  // Hide Game Screen
         document.getElementById("status-bar-container").classList.add("hidden");  // Hide Health bar
         document.getElementById("stat-panel").classList.add("hidden");  // Hide Upgrade Tab
@@ -371,24 +371,23 @@ socket.on("state", (data) => {
     }
 
     // Update leaderboard
-const leaderboardList = document.getElementById("leaderboard-list");
-const leaderboardDiv = document.getElementById("leaderboard");
+    const leaderboardList = document.getElementById("leaderboard-list");
+    const leaderboardDiv = document.getElementById("leaderboard");
 
-if (leaderboardList && leaderboardDiv) {
-    leaderboardDiv.classList.remove("hidden");
-    const sorted = Object.entries(data.players)
-        .filter(([id, p]) => p.spawned)
-        .sort((a, b) => b[1].level - a[1].level) // sort by level
+    if (leaderboardList && leaderboardDiv) {
+        leaderboardDiv.classList.remove("hidden");
+        const sorted = Object.entries(data.players)
+            .filter(([id, p]) => p.spawned)
+            .sort((a, b) => b[1].level - a[1].level) // sort by level
 
-        .slice(0, 5);
+            .slice(0, 5);
 
-    leaderboardList.innerHTML = ""; // Clear old entries
-    sorted.forEach(([id, player], index) => {
-        const li = document.createElement("li");
-        li.textContent = `${index + 1}. ${player.name} - Level ${player.level}`;
-        leaderboardList.appendChild(li);
+        leaderboardList.innerHTML = ""; // Clear old entries
+        sorted.forEach(([id, player], index) => {
+            const li = document.createElement("li");
+            li.textContent = `${index + 1}. ${player.name} - Level ${player.level}`;
+            leaderboardList.appendChild(li);
     });
-
 
 }
 
@@ -411,19 +410,19 @@ if (leaderboardList && leaderboardDiv) {
         setStatSegments('movementSpeed', players[myId].movementSpeed);
 
         // Class Selector Pop Up
-        if (players[myId].level === 10 && players[myId].class === "pistol" && selectClassIgnore == 0){
+        if (players[myId].level >= 10 && players[myId].class === "pistol" && selectClassIgnore == 0){
             document.getElementById("class-panel").classList.remove("hidden");
         }
-        else if (players[myId].level === 15 && players[myId].class === "pistol" && selectClassIgnore == 1){
+        else if (players[myId].level >= 15 && players[myId].class === "pistol" && selectClassIgnore == 1){
             document.getElementById("class-panel").classList.remove("hidden");
         }
-        else if (players[myId].level === 20 && players[myId].class === "pistol" && selectClassIgnore == 2){
+        else if (players[myId].level >= 20 && players[myId].class === "pistol" && selectClassIgnore == 2){
             document.getElementById("class-panel").classList.remove("hidden");
         }
-        else if (players[myId].level === 25 && players[myId].class === "pistol" && selectClassIgnore == 3){
+        else if (players[myId].level >= 25 && players[myId].class === "pistol" && selectClassIgnore == 3){
             document.getElementById("class-panel").classList.remove("hidden");
         }
-        else if (players[myId].level === 30 && players[myId].class === "pistol" && selectClassIgnore == 4){
+        else if (players[myId].level >= 30 && players[myId].class === "pistol" && selectClassIgnore == 4){
             document.getElementById("class-panel").classList.remove("hidden");
         }
         if (players[myId].class != "pistol"){
@@ -436,7 +435,7 @@ if (leaderboardList && leaderboardDiv) {
 
 const backgroundImage = new Image()
 //backgroundImage.src = 'https://img.freepik.com/premium-photo/grid-lines-background-with-white-background-white-grid-background_207225-3315.jpg';
-backgroundImage.src = "Resources/background3.png"
+backgroundImage.src = "Resources/background5.png"
 
 const playerImage = new Image();
 playerImage.src = 'Resources/blueShip.png';
@@ -592,11 +591,7 @@ function drawGame() {
         
         // Determine size and max HP
         const size = npc.color === "yellow" ? 20 : npc.color === "purple" ? 40 : npc.color === "pink" ? 60 : 10;
-        const maxhp = npc.color === "yellow" ? 100 : npc.color === "purple" ? 250 : npc.color === "pink" ? 600 : 100;
-    
-        
-        npc.rotation = 0;
-        
+        const maxhp = npc.color === "yellow" ? 100 : npc.color === "purple" ? 250 : npc.color === "pink" ? 600 : 100;        
 
         // Choose image
         let asteroidImage;
