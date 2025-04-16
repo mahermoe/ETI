@@ -31,7 +31,7 @@ const spawnDropInterval = 5000 // 5 Seconds
 const classData = {
   pistol: {
     bulletSpeed: 6,
-    bulletDmg: 20,
+    bulletDmg: 15,
     hitbox: 15,
     movementSpeed: 2,
     bulletsPerShot: 1,
@@ -41,18 +41,18 @@ const classData = {
     range: 450
   },
   smg: {
-    bulletSpeed: 7,
-    bulletDmg: 8,
+    bulletSpeed: 6,
+    bulletDmg: 10,
     hitbox: 15,
     movementSpeed: 2,
     bulletsPerShot: 1,
-    spread: 0,
-    fireRate: 300,     // 
+    spread: 20,
+    fireRate: 200,     // 
     autoFire: true ,    // hold mouse button
-    range: 350
+    range: 450
   },
   rifle: {
-    bulletSpeed: 15,
+    bulletSpeed: 10,
     bulletDmg: 20,
     hitbox: 15,
     movementSpeed: 2,
@@ -74,7 +74,7 @@ const classData = {
     range: 900
   },
   shotgun: {
-    bulletSpeed: 6,
+    bulletSpeed: 4,
     bulletDmg: 17,
     hitbox: 15,
     movementSpeed: 2,
@@ -82,7 +82,7 @@ const classData = {
     spread: 30,
     fireRate: 1200,    // 1 shot/sec
     autoFire: false,
-    range: 350
+    range: 325
   }
 };
   

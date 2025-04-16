@@ -2,6 +2,14 @@ import socket from "./socket.js";
 
 let myId = null; // Store the player's ID
 
+const classDisplayNames = {
+    pistol: "Blaster",
+    smg: "Plasma Repeater",
+    rifle: "Gauss Rifle",
+    sniper: "Railgun",
+    shotgun: "Pulse Scattergun"
+  };
+
 // Show custom success popup
 function showSuccess(message) {
     const box = document.getElementById("successBox");
@@ -492,7 +500,9 @@ function drawGame() {
         context.fillStyle = "black";
         context.font = "12px Arial";
         context.fillText(player.name || "?", player.x - 15, player.y - 50);
-        context.fillText(player.class || "?", player.x - 15, player.y - 35);
+        const displayClass = classDisplayNames[player.class] || player.class;
+        context.fillText(displayClass, player.x - 15, player.y - 35);
+
 
         // Draw healthbar above each player
         const barWidth = 40;
