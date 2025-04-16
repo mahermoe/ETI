@@ -370,15 +370,18 @@ if (leaderboardList && leaderboardDiv) {
     leaderboardDiv.classList.remove("hidden");
     const sorted = Object.entries(data.players)
         .filter(([id, p]) => p.spawned)
-        .sort((a, b) => b[1].xp - a[1].xp)
+        .sort((a, b) => b[1].level - a[1].level) // sort by level
+
         .slice(0, 5);
 
     leaderboardList.innerHTML = ""; // Clear old entries
     sorted.forEach(([id, player], index) => {
         const li = document.createElement("li");
-        li.textContent = `${index + 1}. ${player.name} - ${player.xp} XP`;
+        li.textContent = `${index + 1}. ${player.name} - Level ${player.level}`;
         leaderboardList.appendChild(li);
     });
+
+
 }
 
     if (myId && players[myId]) {
