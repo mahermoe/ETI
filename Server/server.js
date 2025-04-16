@@ -30,54 +30,59 @@ const spawnDropInterval = 5000 // 5 Seconds
 
 const classData = {
   pistol: {
-    bulletSpeed: 10,
+    bulletSpeed: 6,
     bulletDmg: 20,
     hitbox: 15,
     movementSpeed: 2,
     bulletsPerShot: 1,
     spread: 0,
-    fireRate: 500,     // milliseconds between shots (2 shots/sec)
-    autoFire: false     // must click each time
+    fireRate: 600,     // milliseconds between shots (2 shots/sec)
+    autoFire: false,     // must click each time
+    range: 450
   },
   smg: {
-    bulletSpeed: 13,
-    bulletDmg: 10,
+    bulletSpeed: 7,
+    bulletDmg: 8,
     hitbox: 15,
     movementSpeed: 2,
     bulletsPerShot: 1,
     spread: 0,
-    fireRate: 100,     // 10 shots/sec
-    autoFire: true     // hold mouse button
+    fireRate: 300,     // 
+    autoFire: true ,    // hold mouse button
+    range: 350
   },
   rifle: {
     bulletSpeed: 15,
-    bulletDmg: 15,
+    bulletDmg: 20,
     hitbox: 15,
     movementSpeed: 2,
     bulletsPerShot: 1,
     spread: 0,
-    fireRate: 500,     // 2 shots/sec
-    autoFire: false
+    fireRate: 800,     //
+    autoFire: false,
+    range: 650
   },
   sniper: {
     bulletSpeed: 25,
-    bulletDmg: 100,
+    bulletDmg: 50,
     hitbox: 15,
     movementSpeed: 2,
     bulletsPerShot: 1,
     spread: 0,
-    fireRate: 1200,    // 0.8 shots/sec
-    autoFire: false
+    fireRate: 1600,    //  shots/sec
+    autoFire: false,
+    range: 900
   },
   shotgun: {
-    bulletSpeed: 8,
-    bulletDmg: 10,
+    bulletSpeed: 6,
+    bulletDmg: 17,
     hitbox: 15,
     movementSpeed: 2,
-    bulletsPerShot: 5,
-    spread: 15,
-    fireRate: 1000,    // 1 shot/sec
-    autoFire: false
+    bulletsPerShot: 7,
+    spread: 30,
+    fireRate: 1200,    // 1 shot/sec
+    autoFire: false,
+    range: 350
   }
 };
   
@@ -178,7 +183,10 @@ io.on('connection', (socket) => {
         dx,
         dy,
         owner: socket.id,
-        class: player.class
+        class: player.class,
+        startX: player.x,
+        startY: player.y,
+        maxDistance: weapon.range
       });
     }
   
@@ -299,6 +307,16 @@ setInterval(() => {
     bullet.x += bullet.dx;
     bullet.y += bullet.dy;
 
+    // Check if bullet has traveled beyond its max range using squared distance
+    const dx = bullet.x - bullet.startX;
+    const dy = bullet.y - bullet.startY;
+    const distSquared = dx * dx + dy * dy;
+
+    if (distSquared > bullet.maxDistance * bullet.maxDistance) {
+      bullets.splice(i, 1);
+      continue;
+}
+
     let hit = false;
 
     // Bullet Damaging Players
@@ -360,7 +378,7 @@ setInterval(() => {
 
         // NPC Death -- Give Player XP -- Remove NPC
         if (npcTarget.hp <= 0){
-          let xpForKill = npcTarget.color === "yellow" ? 75 : npcTarget.color === "purple" ? 200 : npcTarget.color === "pink" ? 500 : 0;
+          let xpForKill = npcTarget.color === "yellow" ? 3000 : npcTarget.color === "purple" ? 5000 : npcTarget.color === "pink" ? 8000 : 0;
           giveXp(players[bullet.owner], xpForKill);
           console.log(`${players[bullet.owner].name} killed NPC ${npcId} and earned ${xpForKill} XP!`);
           delete npcs[npcId];
