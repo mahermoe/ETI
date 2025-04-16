@@ -80,6 +80,7 @@ resizeCanvas(); // Call once initially
 const players = {};
 let bullets = []; // Array to hold bullet objects   
 let npcs = {};
+let drops = {};
 let mouseDown = false;
 let mouseWorldX = 0; // Calculated each frame based on player position and mouse screen position
 let mouseWorldY = 0;
@@ -93,21 +94,6 @@ let keys = {
     s: false,
     d: false,
 };
-
-//  Loot Boxes
-const lootBoxes = [
-    { x: 200, y: 200, width: 30, height: 30, contents: ["Shield", "XP"], collected: false },
-    { x: 130, y: 130, width: 30, height: 30, contents: ["Med Kit"], collected: false },
-    { x: 150, y: 150, width: 30, height: 30, contents: ["Ammo", "XP"], collected: false },
-    { x: 100, y: 100, width: 30, height: 30, contents: ["Test"], collected: false },
-
-];
-
-function isPlayerNearLootBox(player, box) {
-    const dx = player.x - (box.x + box.width / 2);
-    const dy = player.y - (box.y + box.height / 2);
-    return Math.sqrt(dx * dx + dy * dy) < 50;
-}
 
 // ---------------- Capture mouse events ---------------- \\
 canvas.addEventListener("mousedown", () => {
@@ -176,17 +162,18 @@ document.addEventListener("keydown", (event) => {
         keys[event.key] = true;
     }
 
-    // Loot Box Interaction
+    // Drops Interaction
     if ((event.key === 'e' || event.key === 'E') && myId && players[myId]) {
-        const player = players[myId];
-        lootBoxes.forEach(box => {
-            if (!box.collected && isPlayerNearLootBox(player, box)) {
-                box.collected = true;
-                addToInventory(box.contents);
-                showSuccess(`You collected: ${box.contents.join(", ")}`);
-                console.log(`Collected loot: ${box.contents.join(", ")}`);
+        for(const id in drops){
+            const drop = drops[id];
+            const dx = drop.x - players[myId].x;
+            const dy = drop.y - players[myId].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 30 && myId && players[myId]){
+                socket.emit("pickupDrop", id);
+                break;
             }
-        });
+        }
     }
 });
   
@@ -248,6 +235,7 @@ updateMovement();
 socket.on("state", (data) => {
     bullets = data.bullets || []; // Sync Bullets
     npcs = data.npcs || {}; // Sync Npcs
+    drops = data.drops || {};
 
     // If player client isn't spawned and name screen is hidden, show name screen
     if(!data.players[socket.id].spawned && document.getElementById("enterNameScreen").classList.contains("hidden")){ 
@@ -383,17 +371,6 @@ function drawGame() {
         context.fillRect(0, -cannonWidth / 2, cannonLength, cannonWidth); // Draw cannon
         context.restore();
     }
-    
-    // Draw loot boxes
-    lootBoxes.forEach(box => {
-        if (!box.collected) {
-            context.fillStyle = "gold";
-            context.fillRect(box.x, box.y, box.width, box.height);
-            context.fillStyle = "black";
-            context.font = "10px Arial";
-            context.fillText("Loot", box.x + 2, box.y - 5);
-        }
-    });
 
     // Draw all bullets
     bullets.forEach((b) => {
@@ -406,17 +383,19 @@ function drawGame() {
     // Draw all npcs
     for (const id in npcs){
         const npc = npcs[id];
+        const size = npc.color === "yellow" ? 10 : npc.color === "purple" ? 20 : npc.color === "pink" ? 30 : 10;
+        const maxhp = npc.color === "yellow" ? 100 : npc.color === "purple" ? 250 : npc.color === "pink" ? 600 : 100;
 
         // Draw npc as square
         context.fillStyle = npc.color;
-        context.fillRect(npc.x - 10, npc.y - 10, 20, 20);
+        context.fillRect(npc.x - size, npc.y - size, size * 2, size * 2);
 
         // Draw npc hp bar
-        const barWidth = 40;
+        const barWidth = 60;
         const barHeight = 6;
-        const hpPercent = Math.max(npc.hp / 100, 0);
+        const hpPercent = Math.max(npc.hp / maxhp, 0);
         const barX = npc.x - barWidth / 2;
-        const barY = npc.y - 20;
+        const barY = npc.y - (size + 10);
 
         // -- Healthbar outerbox
         context.fillStyle = "gray";
@@ -424,6 +403,13 @@ function drawGame() {
         // -- Healthbar innerbox (colored)
         context.fillStyle = hpPercent > 0.66 ? "green" : hpPercent > 0.33 ? "orange" : "red";
         context.fillRect(barX, barY, barWidth * hpPercent, barHeight);
+    }
+
+    // Draw Drops
+    for (const id in drops){
+        const drop = drops[id];
+        context.fillStyle = drop.type === "medkit" ? "red" : "blue";
+        context.fillRect(drop.x - 5, drop.y - 5, 10, 10);
     }
   
 

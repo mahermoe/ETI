@@ -14,7 +14,9 @@ app.use(express.json());
 let players = {};
 let bullets = [];
 let npcs = {};
-let colors = ["yellow", "blue", "purple"];
+let colors = ["yellow", "purple", "pink"];
+let drops = {};
+let dropTypes = ["medkit", "armor"];
 
 const classData = {
   pistol: {
@@ -169,6 +171,26 @@ io.on('connection', (socket) => {
     console.log(`[${player.class}] ${player.name} fired`);
   });
 
+  socket.on('pickupDrop', (dropId) => {
+    const drop = drops[dropId];
+    const player = players[socket.id];
+    if (!drop || !player || !player.spawned) return;
+
+    const dx = drop.x - player.x;
+    const dy = drop.y - player.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < 30){
+      if (drop.type === "medkit"){
+        player.hp = Math.min(player.hp + 30, 100);
+      }
+      else { // type === "armor"
+        player.armor = Math.min(player.armor + 20, player.maxArmor);
+      }
+      delete drops[dropId];
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
     delete players[socket.id];
@@ -189,20 +211,38 @@ function doHealthRegen(){
 }
 doHealthRegen() // Initial Call
 
+// Spawn Random NPCs
 function spawnRandomNPC(){
   if (Object.keys(npcs).length < 100){ // Don't spawn npc if amount >= 100
     const id = "npc_" + Date.now(); // Unique id based on time
+    const color = colors[Math.floor(Math.random() * colors.length)]; // Random color from colors array
+    const hp = color === "yellow" ? 100 : color === "purple" ? 250 : color === "pink" ? 600 : 100;
     npcs[id] = {
       x: Math.floor(Math.random() * 3000), // Random spawn location
       y: Math.floor(Math.random() * 3000),
-      color: colors[Math.floor(Math.random() * colors.length)], // Random color from colors array
-      hp: 100
+      color,
+      hp
     }
     console.log(`Spawned NPC ${id} at (${npcs[id].x}, ${npcs[id].y})`);
   }
-  setTimeout(spawnRandomNPC, 1000); // Spawn npcs every 1 second
+  setTimeout(spawnRandomNPC, 2500); // Spawn npcs every 2.5 second
 }
 spawnRandomNPC(); // Initial Npc spawn
+
+function spawnDrop(){
+  if(Object.keys(drops).length < 15){
+    const type = dropTypes[Math.floor(Math.random() * dropTypes.length)] 
+    const id = "drop_" + type + "_" + Date.now();
+    drops[id] = {
+      x: Math.floor(Math.random() * 3000), // Random spawn location
+      y: Math.floor(Math.random() * 3000),
+      type
+    }
+    console.log(`Spawned Drop ${id} at (${drops[id].x}, ${drops[id].y})`);
+  }
+  setTimeout(spawnDrop, 5000); // Spawn drop every 5 seconds
+}
+spawnDrop(); // Initial Drop spawn
 
 function giveXp(player, xp){
   player.xp += xp;
@@ -266,6 +306,7 @@ setInterval(() => {
 
     for (const npcId in npcs){
       const npcTarget = npcs[npcId];
+      const npcHitbox = npcTarget.color === "yellow" ? 10 : npcTarget.color === "purple" ? 20 : npcTarget.color === "pink" ? 30 : 10;
       if (hit) break;
       if (npcTarget.hp <= 0) continue;
 
@@ -275,14 +316,14 @@ setInterval(() => {
       const hitbox = classData[bullet.class].hitbox;
 
       // Damage NPC Health
-      if (dist <= hitbox){
+      if (dist <= 10 + npcHitbox){
         npcTarget.hp -= classData[bullet.class].bulletDmg;
         console.log(`${players[bullet.owner].name} hit NPC ${npcId} for ${classData[bullet.class].bulletDmg} dmg`);
         hit = true;
 
         // NPC Death -- Give Player XP -- Remove NPC
         if (npcTarget.hp <= 0){
-          let xpForKill = npcTarget.color === "yellow" ? 75 : npcTarget.color === "blue" ? 200 : npcTarget.color === "purple" ? 500 : 0;
+          let xpForKill = npcTarget.color === "yellow" ? 75 : npcTarget.color === "purple" ? 200 : npcTarget.color === "pink" ? 500 : 0;
           giveXp(players[bullet.owner], xpForKill);
           console.log(`${players[bullet.owner].name} killed NPC ${npcId} and earned ${xpForKill} XP!`);
           delete npcs[npcId];
@@ -305,6 +346,7 @@ setInterval(() => {
     players,
     bullets,
     npcs,
+    drops
   });
 }, 1000 / framerate);
 
