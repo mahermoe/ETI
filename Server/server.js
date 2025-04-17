@@ -88,7 +88,7 @@ const classData = {
     spread: 30,
     fireRate: 1200,    // 1 shot/sec
     autoFire: false,
-    range: 325
+    range: 250
   }
 };
   
