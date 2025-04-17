@@ -432,7 +432,20 @@ socket.on("state", (data) => {
 });
 
 // ------------------------- Render Game ------------------------- \\
-
+const shipImages = {
+    pistol: new Image(),
+    smg: new Image(),
+    rifle: new Image(),
+    sniper: new Image(),
+    shotgun: new Image()
+  };
+  
+  shipImages.pistol.src = "Resources/blueShip.png";
+  shipImages.smg.src = "Resources/repeaterShip.png";
+  shipImages.rifle.src = "Resources/guassShip.png";
+  shipImages.sniper.src = "Resources/sniperShip.png";
+  shipImages.shotgun.src = "Resources/shotgunShip.png";
+  
 const backgroundImage = new Image()
 //backgroundImage.src = 'https://img.freepik.com/premium-photo/grid-lines-background-with-white-background-white-grid-background_207225-3315.jpg';
 backgroundImage.src = "Resources/background5.png"
@@ -496,7 +509,7 @@ function drawGame() {
         // context.fill();
 
         // Draw player name/class above the circle
-        context.fillStyle = "black";
+        context.fillStyle = "white";
         context.font = "12px Arial";
         context.fillText(player.name || "?", player.x - 15, player.y - 50);
         const displayClass = classDisplayNames[player.class] || player.class;
@@ -536,20 +549,14 @@ function drawGame() {
 
         const angle = Math.atan2(dy, dx);
 
-        if (id == myId) {
-            
-            context.save();
-            context.translate(player.x, player.y);
-            context.rotate(angle + Math.PI / 2); // same angle used for cannon
-            context.drawImage(playerImage, -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
-            context.restore();
-        }else if (id!=myId){
-            context.save();
-            context.translate(player.x, player.y);
-            context.rotate(angle + Math.PI / 2); // same angle used for cannon
-            context.drawImage(enemyImage, -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
-            context.restore();
-        }
+        const shipSprite = shipImages[player.class] || playerImage;
+
+        context.save();
+        context.translate(player.x, player.y);
+        context.rotate(angle + Math.PI / 2);
+        context.drawImage(shipSprite, -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
+        context.restore();
+
 
         // const cannonLength = 20;
         // const cannonWidth = 6;
