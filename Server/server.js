@@ -389,7 +389,7 @@ setInterval(() => {
 
         // NPC Death -- Give Player XP -- Remove NPC
         if (npcTarget.hp <= 0){
-          let xpForKill = npcTarget.color === "yellow" ? 6000 : npcTarget.color === "purple" ? 200 : npcTarget.color === "pink" ? 500 : 0;
+          let xpForKill = npcTarget.color === "yellow" ? 100 : npcTarget.color === "purple" ? 250 : npcTarget.color === "pink" ? 500 : 0;
           giveXp(players[bullet.owner], xpForKill);
           console.log(`${players[bullet.owner].name} killed NPC ${npcId} and earned ${xpForKill} XP!`);
           delete npcs[npcId];
