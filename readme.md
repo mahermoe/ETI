@@ -1,12 +1,25 @@
-Installation Notes:
+***Created by:
+Maher Mohamed,
+Mohammed Jaradat,
+Ismaeel Shajrah,
+Abraham Abdulkarim***
 
-Download NodeJS
+**Installation Notes:**
 
-npm install express
+- Download NodeJS
 
-npm install socket.io
+- Run the following commands in terminal
+
+    `npm install express`
 
 
-Run Command in Terminal: node Server/server.js
+    `npm install socket.io`
 
-Go to: http://localhost:2000/
+
+- Run Command in Terminal to start the server 
+
+    `node Server/server.js `
+
+- Go to: http://localhost:1439/ 
+
+- To connect with other devices, Go to: (ip of computer host):1439

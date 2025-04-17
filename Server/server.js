@@ -94,7 +94,7 @@ const classData = {
   
 
 server.listen(1439, '0.0.0.0', () => {
-  console.log('Server is up on port 2000');
+  console.log('Server is up on port 1439');
 });
 
 io.on('connection', (socket) => {
