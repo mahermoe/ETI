@@ -30,8 +30,8 @@ const hpPerDrop = 30;
 const healthRegenAmount = 0.3;
 const healthRegenInterval = 3000; // 3 Seconds
 const maxNpcs = 100;
-const maxDrops = 15;
-const spawnNpcInterval = 2500 // 2.5 Seconds
+const maxDrops = 25;
+const spawnNpcInterval = 1000 // 2.5 Seconds
 const spawnDropInterval = 5000 // 5 Seconds
 
 const classData = {
@@ -93,7 +93,7 @@ const classData = {
 };
   
 
-server.listen(2000, '0.0.0.0', () => {
+server.listen(1439, '0.0.0.0', () => {
   console.log('Server is up on port 2000');
 });
 
@@ -273,7 +273,7 @@ function spawnRandomNPC(){
   if (Object.keys(npcs).length < maxNpcs){ // Don't spawn npc if amount >= 100
     const id = "npc_" + Date.now(); // Unique id based on time
     const color = colors[Math.floor(Math.random() * colors.length)]; // Random color from colors array
-    const hp = color === "yellow" ? 100 : color === "purple" ? 250 : color === "pink" ? 600 : 100;
+    const hp = color === "yellow" ? 75 : color === "purple" ? 150 : color === "pink" ? 300 : 100;
     npcs[id] = {
       x: Math.floor(Math.random() * 3000), // Random spawn location
       y: Math.floor(Math.random() * 3000),

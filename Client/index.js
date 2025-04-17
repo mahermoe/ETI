@@ -605,7 +605,7 @@ function drawGame() {
         
         // Determine size and max HP
         const size = npc.color === "yellow" ? 20 : npc.color === "purple" ? 40 : npc.color === "pink" ? 60 : 10;
-        const maxhp = npc.color === "yellow" ? 100 : npc.color === "purple" ? 250 : npc.color === "pink" ? 600 : 100;        
+        const maxhp = npc.color === "yellow" ? 75 : npc.color === "purple" ? 150 : npc.color === "pink" ? 300 : 100;        
 
         // Choose image
         let asteroidImage;
