@@ -125,9 +125,18 @@ io.on('connection', (socket) => {
     if (players[socket.id]) {
       players[socket.id].name = playerName;
       players[socket.id].hp = 100;
+      players[socket.id].armor = 0;
       players[socket.id].x = 1500;
       players[socket.id].y = 1500;
       //----------Reset StatPoints, Level, Xp, Class, Etc. Not yet.----------\\
+      players[socket.id].level = 1;
+      players[socket.id].xp = 0;
+      players[socket.id].skillPoints = 1;
+      players[socket.id].class = "pistol";
+      players[socket.id].maxArmor = 0;
+      players[socket.id].healthRegen = 0;
+      players[socket.id].bulletDamage = 0;
+      players[socket.id].movementSpeed = 0;
       console.log(`Player registered: ${playerName} (ID: ${socket.id})`);
       socket.emit('registerSuccess', playerName, socket.id);
       
@@ -293,6 +302,7 @@ function spawnDrop(){
 spawnDrop(); // Initial Drop spawn
 
 function giveXp(player, xp){
+  if (!player) return;
   player.xp += xp;
   if (player.level >= 30){
     if (player.xp > 3000){
@@ -363,6 +373,9 @@ setInterval(() => {
           target.hp = 0;
           target.spawned = false;
           console.log(`${target.name} was eliminated by ${players[bullet.owner].name}`);
+          if (players[bullet.owner]){ // Give bullet owner xp (target level / 3 * 100)
+            giveXp(players[bullet.owner], Math.round(target.level / 1.5 * 100));
+          }
         }
 
         break; // One hit per bullet

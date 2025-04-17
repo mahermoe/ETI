@@ -1,6 +1,7 @@
 import socket from "./socket.js";
 
 let myId = null; // Store the player's ID
+let selectClassIgnore = 0;
 
 const classDisplayNames = {
     pistol: "Blaster",
@@ -47,6 +48,7 @@ function submitName() {
     socket.on("registerSuccess", (playerName, id) => {
         showSuccess(`Welcome ${playerName}, Your Story Begins.`);
 
+        selectClassIgnore = 0; // Reset Ignore counter for selecting class
         myId = id; // Store the player's ID when received from the server
 
         setTimeout(() => {
@@ -54,7 +56,8 @@ function submitName() {
             document.getElementById("input-wrapper").classList.add("hidden"); // Hide backround
             document.getElementById("gameScreen").classList.remove("hidden");  // Show Game Screen
             document.getElementById("status-bar-container").classList.remove("hidden");  // Show Health bar
-            document.getElementById("stat-panel").classList.remove("hidden");  // Show Upgrade Tab
+            document.getElementById("stat-panel").classList.remove("hidden");  // Show Stat Panel
+            document.getElementById("toggle-stat-panel").classList.remove("hidden"); // Show Stat Panel Toggle
             document.getElementById("xp-bar-container").classList.remove("hidden");  // Show Xp bar
             document.getElementById("armor-bar-container").classList.remove("hidden");  // Show Armor bar
         }, 1000);
@@ -100,7 +103,6 @@ let mouseScreenX = 0; // Raw position of mouse on screen
 let mouseScreenY = 0;
 const lerpFactor = 0.1; // Controls smooth movement
 let zoom = 2;
-let selectClassIgnore = 0;
 let keys = {
     w: false,
     a: false,
@@ -273,6 +275,10 @@ function upgradeStat(statName){
     socket.emit('upgradeStat', statName);
 }
 
+document.getElementById("toggle-stat-panel").addEventListener("click", () => {
+    document.getElementById("stat-panel").classList.toggle("hidden");
+});
+
 // ------------------------- Send Movement to Server ------------------------- \\
 function updateMovement() {
     let dx = 0, dy = 0;
@@ -306,7 +312,8 @@ socket.on("state", (data) => {
         document.getElementById("input-wrapper").classList.remove("hidden"); // Show Input Wrapper
         document.getElementById("gameScreen").classList.add("hidden");  // Hide Game Screen
         document.getElementById("status-bar-container").classList.add("hidden");  // Hide Health bar
-        document.getElementById("stat-panel").classList.add("hidden");  // Hide Upgrade Tab
+        document.getElementById("stat-panel").classList.add("hidden");  // Hide Stat Panel
+        document.getElementById("toggle-stat-panel").classList.add("hidden"); // Hide Stat Panel Toggle
         document.getElementById("xp-bar-container").classList.add("hidden");  // Hide Xp bar
         document.getElementById("armor-bar-container").classList.add("hidden");  // Hide Armor bar
         document.getElementById("class-panel").classList.add("hidden"); // Hide Select Class Panel

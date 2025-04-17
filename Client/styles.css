@@ -1,73 +1,10 @@
 @import url(https://fonts.googleapis.com/css?family=Exo:100);
 
-/* Background data (Original source: https://subtlepatterns.com/grid-me/) */
-/* Animations 
-@-webkit-keyframes bg-scrolling-reverse {
-  100% {
-    background-position: 50px 50px;
-  }
-}
-@-moz-keyframes bg-scrolling-reverse {
-  100% {
-    background-position: 50px 50px;
-  }
-}
-@-o-keyframes bg-scrolling-reverse {
-  100% {
-    background-position: 50px 50px;
-  }
-}
-@keyframes bg-scrolling-reverse {
-  100% {
-    background-position: 50px 50px;
-  }
-}
-@-webkit-keyframes bg-scrolling {
-  0% {
-    background-position: 50px 50px;
-  }
-}
-@-moz-keyframes bg-scrolling {
-  0% {
-    background-position: 50px 50px;
-  }
-}
-@-o-keyframes bg-scrolling {
-  0% {
-    background-position: 50px 50px;
-  }
-}
-@keyframes bg-scrolling {
-  0% {
-    background-position: 50px 50px;
-  }
-}*/
-
-
-
 body {
   margin: 0;
   color: #999;
   font: 400 16px/1.5 exo, ubuntu, "segoe ui", helvetica, arial, sans-serif;
   text-align: center;
-  
-  /* background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAIAAACRXR/mAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAABnSURBVHja7M5RDYAwDEXRDgmvEocnlrQS2SwUFST9uEfBGWs9c97nbGtDcquqiKhOImLs/UpuzVzWEi1atGjRokWLFi1atGjRokWLFi1atGjRokWLFi1af7Ukz8xWp8z8AAAA//8DAJ4LoEAAlL1nAAAAAElFTkSuQmCC") repeat 0 0; */
-  -webkit-animation: bg-scrolling-reverse 0.92s infinite;
-  /*Safari 4+*/
-  
-  -moz-animation: bg-scrolling-reverse 0.92s infinite;
-  /*Fx 5+*/
-  
-  -o-animation: bg-scrolling-reverse 0.92s infinite;
-  /*Opera 12+*/
-  
-  animation: bg-scrolling-reverse 0.92s infinite;
-  /*IE 10+*/
-
-  -webkit-animation-timing-function: linear;
-  -moz-animation-timing-function: linear;
-  -o-animation-timing-function: linear;
-  animation-timing-function: linear;
 }
 
 .input-wrapper {
@@ -79,10 +16,10 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url('enterNameBack.jpg'); /* optional background */
+  background-image: url('enterNameBack.jpg'); 
   background-size: cover;
   background-position: center;
-  z-index: 999; /* ensure it's on top */
+  z-index: 999; 
 }
 
 html, body {
@@ -167,7 +104,7 @@ button:active {
   bottom: 20px;
   left: 20px;
   text-decoration: none;
-  background-color: rgba(70, 130, 180, 0.9); /* steelblue */
+  background-color: rgba(70, 130, 180, 0.9); 
   color: white;
   padding: 10px 15px;
   border-radius: 5px;
@@ -409,9 +346,36 @@ button:active {
 .plus-btn:active {
   transform: scale(0.92);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) inset;
-  background-color: #e83674; /* Slightly darker shade for click */
+  background-color: #e83674; 
 }
 /*end of stat panel*/
+
+/* stat panel toggle button*/
+
+#toggle-stat-panel.stat-toggle-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 400px; 
+  z-index: 999;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#toggle-stat-panel.stat-toggle-btn:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+#toggle-stat-panel.stat-toggle-btn:active {
+  transform: scale(0.95);
+}
+
 
 /*class panel*/
 
